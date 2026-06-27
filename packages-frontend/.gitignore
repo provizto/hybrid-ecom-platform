@@ -1,0 +1,9 @@
+# Custom Security for Web3 & Hybrid Platform
+.env
+.env.local
+.env.*.local
+
+# Hardhat artifacts and cache
+artifacts/
+cache/
+/ignition/deployments/
