@@ -4,55 +4,62 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { parseEther } from "viem";
 import { config } from "./config";
 import * as kontrakData from "./abis/DigitalGoodsStoreABI.json";
-import { WHITELABEL_PRODUCTS } from "./products";
+import { WHITELABEL_PRODUCTS, type Product } from "./products";
 import { ProductCard } from "./ProductCard";
 
 const queryClient = new QueryClient();
 
-function MainApp() {
-  const [parsedAbi, setParsedAbi] = useState(null);
+interface DbLog {
+  buyer: string;
+  tokenId: string;
+  productId: string;
+  timestamp: string;
+  txHash: string;
+  currencyMethod: string; // Tambahan log pelacak mata uang
+}
 
-  const [adminProductId, setAdminProductId] = useState("1");
-  const [adminPrice, setAdminPrice] = useState("0.05");
+function MainApp() {
+  const [parsedAbi, setParsedAbi] = useState<any>(null);
+
+  const [adminProductId, setAdminProductId] = useState<string>("1");
+  const [adminPrice, setAdminPrice] = useState<string>("0.05");
 
   // State untuk Rig Pembayaran Fiat Global
-  const [fiatBuyerAddress, setFiatBuyerAddress] = useState("");
-  const [fiatProductId, setFiatProductId] = useState("3");
-  const [fiatPaymentStatus, setFiatPaymentStatus] = useState("IDLE");
-  const [selectedCurrency, setSelectedCurrency] = useState("USD");
+  const [fiatBuyerAddress, setFiatBuyerAddress] = useState<string>("");
+  const [fiatProductId, setFiatProductId] = useState<string>("3");
+  const [fiatPaymentStatus, setFiatPaymentStatus] = useState<string>("IDLE");
+  const [selectedCurrency, setSelectedCurrency] = useState<string>("USD"); // Default ke USD untuk Pasar Global
 
-  const [dbLogs, setDbLogs] = useState([]);
-
-  // State untuk Mengontrol Pop-up Modal Wallet Selector
-  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [dbLogs, setDbLogs] = useState<DbLog[]>([]);
 
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
 
   const { writeContract, isPending: isTxPending, error: txError, data: txHash } = useWriteContract();
-  const currentContractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
+  const currentContractAddress = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}` | undefined;
 
+  // Simulasi Kurs Nilai Tukar Fixed (Bisa ditarik dari API CoinGecko di masa depan)
   const ETH_TO_USD_RATE = 3500;
   const ETH_TO_IDR_RATE = 54000000;
 
-  // Otomatis tutup modal begitu koneksi sukses & sinkronisasi alamat ke form fiat
+  // SINKRONISASI OTOMATIS: Isi kolom alamat fiat jika wallet terhubung
   useEffect(() => {
     if (isConnected && address) {
       setFiatBuyerAddress(address);
-      setIsWalletModalOpen(false); 
     } else {
       setFiatBuyerAddress("");
     }
   }, [isConnected, address]);
 
   useEffect(() => {
-    let finalAbi = null;
-    if (kontrakData && kontrakData.abi) {
-      finalAbi = kontrakData.abi;
-    } else if (kontrakData && kontrakData.default && kontrakData.default.abi) {
-      finalAbi = kontrakData.default.abi;
+    let finalAbi: any = null;
+    if (kontrakData && (kontrakData as any).abi) {
+      finalAbi = (kontrakData as any).abi;
+    } else if (kontrakData && (kontrakData as any).default && (kontrakData as any).default.abi) {
+      finalAbi = (kontrakData as any).default.abi;
     }
+
     if (finalAbi) setParsedAbi(finalAbi);
   }, []);
 
@@ -63,11 +70,12 @@ function MainApp() {
     query: { enabled: !!parsedAbi && !!currentContractAddress }
   });
 
+  // Watch Blockchain Events & Sync with Meta currency state
   useWatchContractEvent({
     address: currentContractAddress,
     abi: parsedAbi || [],
     eventName: "NFTOwnershipMinted",
-    onLogs(logs) {
+    onLogs(logs: any[]) {
       if (!logs || !Array.isArray(logs)) return;
       logs.forEach((log) => {
         const args = log.args;
@@ -76,7 +84,7 @@ function MainApp() {
           const tokenNum = args.tokenId ? String(args.tokenId) : "0";
           const productNum = args.productId ? String(args.productId) : "0";
           
-          const newLog = {
+          const newLog: DbLog = {
             buyer: buyerAddr,
             tokenId: tokenNum,
             productId: productNum,
@@ -90,7 +98,7 @@ function MainApp() {
     },
   });
 
-  const handleSetPrice = (e) => {
+  const handleSetPrice = (e: React.FormEvent) => {
     e.preventDefault();
     if (!parsedAbi || !currentContractAddress) return;
     writeContract({
@@ -101,12 +109,7 @@ function MainApp() {
     });
   };
 
-  // INTERSEPSI TOMBOL BELI: Jika belum konek dompet, buka pop-up modal selector
-  const handleDirectBuy = (id, priceEth) => {
-    if (!isConnected) {
-      setIsWalletModalOpen(true);
-      return;
-    }
+  const handleDirectBuy = (id: number, priceEth: string) => {
     if (!parsedAbi || !currentContractAddress) return;
     const dummyAwsTokenUri = `https://aws-s3-digital-goods-store.com/metadata/product-${id}.json`;
     writeContract({
@@ -118,7 +121,7 @@ function MainApp() {
     });
   };
 
-  const handleFiatSimulationSubmit = (e) => {
+  const handleFiatSimulationSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!parsedAbi || !currentContractAddress || !fiatBuyerAddress) return;
 
@@ -132,11 +135,58 @@ function MainApp() {
         address: currentContractAddress,
         abi: parsedAbi,
         functionName: "mintForFiatBuyer",
-        args: [fiatBuyerAddress, dummyAwsTokenUri, BigInt(fiatProductId)],
+        args: [fiatBuyerAddress as `0x${string}`, dummyAwsTokenUri, BigInt(fiatProductId)],
       });
     }, 2000);
   };
 
+  // INTEGRASI MANUAL: Pemaksa koneksi MetaMask Injected ke Node Lokal Hardhat (Chain: 31337)
+  const handleMetaMaskNativeConnect = async () => {
+    if (typeof window !== "undefined" && (window as any).ethereum) {
+      try {
+        const provider = (window as any).ethereum;
+        // Request Akun Sultan
+        const accounts = await provider.request({ method: "eth_requestAccounts" });
+        console.log("MetaMask Connected Account #0:", accounts[0]);
+
+        // Alihkan paksa network MetaMask ke Chain ID Hardhat lokal (31337 -> Hex: 0x7a69)
+        try {
+          await provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x7a69" }], 
+          });
+        } catch (switchError: any) {
+          // Jika network lokal belum ada di daftar MetaMask, tambahkan otomatis
+          if (switchError.code === 4902) {
+            await provider.request({
+              method: "wallet_addEthereumChain",
+              params: [{
+                chainId: "0x7a69",
+                chainName: "Hardhat Local Node",
+                nativeCurrency: { name: "Ethereum", symbol: "ETH", decimals: 18 },
+                rpcUrls: ["http://127.0.0.1:8545"],
+              }],
+            });
+          }
+        }
+
+        // Cari konektor injected/metamask bawaan wagmi untuk sinkronisasi state global app
+        const metamaskConnector = connectors.find(c => c.id === "io.metamask.wrapper" || c.id === "injected");
+        if (metamaskConnector) {
+          connect({ connector: metamaskConnector });
+        } else {
+          window.location.reload(); // Fallback refresh jika state Wagmi terhambat cache
+        }
+
+      } catch (err) {
+        console.error("User menolak koneksi MetaMask:", err);
+      }
+    } else {
+      alert("Ekstensi MetaMask tidak ditemukan! Silakan instal MetaMask di browser lu, bosku.");
+    }
+  };
+
+  // Hitung Nominal Harga Berdasarkan Produk yang Dipilih untuk Tampilan Form
   const selectedProductData = WHITELABEL_PRODUCTS.find(p => p.id === Number(fiatProductId));
   const productPriceEth = selectedProductData ? Number(selectedProductData.defaultPriceEth) : 0.05;
   const convertedFiatPrice = selectedCurrency === "USD" 
@@ -146,7 +196,7 @@ function MainApp() {
   return (
     <div style={{ padding: "40px 20px", fontFamily: "sans-serif", color: "#1c1e21", maxWidth: "1000px", margin: "0 auto" }}>
       
-      {/* NAVBAR HEADER: STERIL DARI TOMBOL KONEKSI LIAR */}
+      {/* NAVBAR HEADER */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #e1e8ed", paddingBottom: "20px", marginBottom: "30px" }}>
         <div>
           <h1 style={{ margin: 0, fontSize: "24px", color: "#0f1419" }}>🏪 {storeName ? String(storeName) : "Web3 Digital Core"}</h1>
@@ -154,57 +204,36 @@ function MainApp() {
         </div>
         
         <div>
-          {isConnected && (
+          {isConnected ? (
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <span style={{ fontSize: "13px", background: "#e8f5e9", color: "#2e7d32", padding: "6px 12px", borderRadius: "20px", fontWeight: "bold" }}>
                 Connected: {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""}
               </span>
               <button onClick={() => disconnect()} style={{ background: "#ff4d4d", color: "white", border: "none", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>Sign Out</button>
             </div>
+          ) : (
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              {/* TOMBOL UTAMA METAMASK BYPASS (SULTAN NODE CONNECT) */}
+              <button 
+                onClick={handleMetaMaskNativeConnect} 
+                style={{ background: "#e67e22", color: "white", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
+              >
+                <img src="https://raw.githubusercontent.com/MetaMask/brand-resources/master/LOGOS/metamask-fox.svg" width="16" alt="MetaMask Fox" />
+                Connect MetaMask (10000 ETH Node)
+              </button>
+
+              {/* Loop Konektor Default / Cadangan Bawaan */}
+              {connectors.map((connector) => (
+                <button key={connector.uid} onClick={() => connect({ connector })} style={{ background: "#0070f3", color: "white", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
+                  {connector.name}
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>
 
-      {/* 📥 POP-UP MODAL SELEKTOR DOMPET MURNI WAGMI BINDING */}
-      {isWalletModalOpen && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 9999, backdropFilter: "blur(4px)" }}>
-          <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "16px", width: "100%", maxWidth: "380px", boxShadow: "0 10px 30px rgba(0,0,0,0.3)", position: "relative", border: "1px solid #eaeaea" }}>
-            
-            <button 
-              onClick={() => setIsWalletModalOpen(false)} 
-              style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "#888" }}
-            >
-              ✕
-            </button>
-
-            <h3 style={{ margin: "0 0 10px 0", textAlign: "center", fontSize: "18px", color: "#111" }}>Connect Your Wallet</h3>
-            <p style={{ margin: "0 0 20px 0", textAlign: "center", fontSize: "12px", color: "#666" }}>Please select a wallet engine to complete your secure on-chain purchase.</p>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              
-              {/* Loop Semua Konektor Terdaftar di Wagmi Config (MetaMask, Backpack, dll.) */}
-              {connectors.map((connector) => (
-                <button 
-                  key={connector.uid} 
-                  onClick={() => connect({ connector })} 
-                  style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", borderRadius: "12px", border: "1px solid #e1e8ed", background: "#f8f9fa", cursor: "pointer", fontWeight: "bold", fontSize: "14px", color: "#0f1419", textAlign: "left", transition: "background 0.2s" }}
-                >
-                  <div style={{ width: "24px", height: "24px", borderRadius: "6px", background: connector.name.toLowerCase().includes("metamask") ? "#e67e22" : "#0070f3", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "12px", fontWeight: "bold" }}>
-                    {connector.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div>{connector.name}</div>
-                    <div style={{ fontSize: "11px", fontWeight: "normal", color: "#999" }}>Secure Core Provider</div>
-                  </div>
-                </button>
-              ))}
-
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* SYSTEM BROADCAST MONITOR */}
+      {/* TRANSACTIONS BROADCAST MONITOR */}
       {(isTxPending || txHash || txError || fiatPaymentStatus === "PROCESSING") && (
         <div style={{ background: "#f8f9fa", padding: "15px", borderRadius: "8px", marginBottom: "30px", border: "1px solid #dee2e6" }}>
           <h4 style={{ marginTop: 0, marginBottom: "5px" }}>⚡ System Broadcast Monitor:</h4>
@@ -219,11 +248,11 @@ function MainApp() {
         </div>
       )}
 
-      {/* SOLUTIONS MARKETPLACE */}
+      {/* WEB3 SOLUTIONS MARKETPLACE */}
       <div style={{ marginBottom: "40px" }}>
         <h3 style={{ margin: "0 0 20px 0", fontSize: "20px", color: "#0f1419" }}>🛒 Global Solutions Marketplace (Multi-Chain/Web3 Buy)</h3>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "25px" }}>
-          {WHITELABEL_PRODUCTS.map((prod) => (
+          {WHITELABEL_PRODUCTS.map((prod: Product) => (
             <ProductCard 
               key={prod.id} 
               product={prod} 
@@ -238,7 +267,7 @@ function MainApp() {
 
       <div style={{ display: "flex", gap: "25px", flexWrap: "wrap", marginBottom: "40px" }}>
         
-        {/* DATABASE LEDGER LOGS */}
+        {/* OFF-CHAIN CENTRAL DATABASE LEDGER */}
         <div style={{ background: "#e8f0fe", padding: "25px", borderRadius: "12px", border: "1px solid #1a73e8", flex: "1", minWidth: "300px" }}>
           <h3 style={{ marginTop: 0, color: "#1a73e8", fontSize: "17px" }}>📊 Global Database Order Logs</h3>
           <p style={{ fontSize: "12px", color: "#5f6368", marginTop: "-5px" }}>Unified dashboard recording incoming cross-border settlement event emissions.</p>
@@ -249,7 +278,7 @@ function MainApp() {
                 📭 No dynamic billing data synchronized yet.
               </div>
             ) : (
-              dbLogs.map((log, index) => (
+              dbLogs.map((log: DbLog, index: number) => (
                 <div key={index} style={{ background: "#ffffff", padding: "12px", borderRadius: "6px", border: "1px solid #c2e7ff", fontSize: "12px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
                     <span style={{ fontWeight: "bold", color: "#188038" }}>📩 Token ID: #{log.tokenId} Settled</span>
@@ -264,7 +293,7 @@ function MainApp() {
           </div>
         </div>
 
-        {/* REKAYASA GLOBAL FIAT GATEWAY */}
+        {/* REKAYASA GLOBAL FIAT GATEWAY DENGAN SELECTOR USD/IDR */}
         <div style={{ background: "#fff4e6", padding: "25px", borderRadius: "12px", border: "1px solid #fcc419", flex: "1", minWidth: "300px" }}>
           <h3 style={{ marginTop: 0, color: "#e67e22", fontSize: "17px" }}>💳 Hybrid International Fiat Settlement Engine</h3>
           <p style={{ fontSize: "12px", color: "#5f6368", marginTop: "-5px" }}>Simulates Stripe Credit Card (USD) or localized QRIS (IDR) triggering automated relay mints.</p>
@@ -292,10 +321,11 @@ function MainApp() {
             <div>
               <label style={{ display: "block", fontSize: "11px", fontWeight: "bold", marginBottom: "3px" }}>3. Select Solutions Product:</label>
               <select value={fiatProductId} onChange={(e) => setFiatProductId(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px" }}>
-                {WHITELABEL_PRODUCTS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                {WHITELABEL_PRODUCTS.map((p: Product) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
 
+            {/* LIVE CONVERSION RATE PREVIEW DISINI */}
             <div style={{ background: "#fff", padding: "10px", borderRadius: "6px", border: "1px solid #ffe8cc", fontSize: "13px", margin: "5px 0" }}>
               <strong>Calculated Billing Value:</strong> <span style={{ color: "#d9480f", fontWeight: "bold" }}>{convertedFiatPrice}</span> 
               <span style={{ fontSize: "11px", color: "#868e96", marginLeft: "5px" }}>({selectedProductData?.defaultPriceEth} ETH Equiv)</span>
