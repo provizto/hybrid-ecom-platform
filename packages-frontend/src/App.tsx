@@ -40,7 +40,7 @@ function MainApp() {
   useEffect(() => {
     if (isConnected && address) {
       setFiatBuyerAddress(address);
-      setIsWalletModalOpen(false); // Menutup pop-up secara otomatis
+      setIsWalletModalOpen(false); 
     } else {
       setFiatBuyerAddress("");
     }
@@ -101,7 +101,12 @@ function MainApp() {
     });
   };
 
+  // INTERSEPSI TOMBOL BELI: Jika belum konek dompet, buka pop-up dulu
   const handleDirectBuy = (id, priceEth) => {
+    if (!isConnected) {
+      setIsWalletModalOpen(true);
+      return;
+    }
     if (!parsedAbi || !currentContractAddress) return;
     const dummyAwsTokenUri = `https://aws-s3-digital-goods-store.com/metadata/product-${id}.json`;
     writeContract({
@@ -132,7 +137,7 @@ function MainApp() {
     }, 2000);
   };
 
-  // KONEKSI PANGGILAN METAMASK NATIVE UNTUK DEEP LINKING ANDROID
+  // NATIVE METAMASK BINDING
   const handleMetaMaskNativeConnect = async () => {
     if (typeof window !== "undefined" && window.ethereum) {
       try {
@@ -187,7 +192,7 @@ function MainApp() {
   return (
     <div style={{ padding: "40px 20px", fontFamily: "sans-serif", color: "#1c1e21", maxWidth: "1000px", margin: "0 auto" }}>
       
-      {/* NAVBAR HEADER */}
+      {/* NAVBAR HEADER: BERSIH TANPA TOMBOL CONNECT */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #e1e8ed", paddingBottom: "20px", marginBottom: "30px" }}>
         <div>
           <h1 style={{ margin: 0, fontSize: "24px", color: "#0f1419" }}>🏪 {storeName ? String(storeName) : "Web3 Digital Core"}</h1>
@@ -195,31 +200,22 @@ function MainApp() {
         </div>
         
         <div>
-          {isConnected ? (
+          {isConnected && (
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <span style={{ fontSize: "13px", background: "#e8f5e9", color: "#2e7d32", padding: "6px 12px", borderRadius: "20px", fontWeight: "bold" }}>
                 Connected: {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""}
               </span>
               <button onClick={() => disconnect()} style={{ background: "#ff4d4d", color: "white", border: "none", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>Sign Out</button>
             </div>
-          ) : (
-            /* HANYA SATU TOMBOL PEMICU MODAL YANG NANGKRING DI NAVBAR */
-            <button 
-              onClick={() => setIsWalletModalOpen(true)} 
-              style={{ background: "#0070f3", color: "white", border: "none", padding: "10px 18px", borderRadius: "25px", cursor: "pointer", fontWeight: "bold", fontSize: "14px", boxShadow: "0 4px 6px rgba(0,112,243,0.2)" }}
-            >
-              🔌 Connect Wallet
-            </button>
           )}
         </div>
       </div>
 
-      {/* 📥 DYNAMIC POP-UP MODAL ENGINE (MODAL WALLET SELECTOR) */}
+      {/* 📥 POP-UP MODAL SELEKTOR DOMPET */}
       {isWalletModalOpen && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 9999, backdropFilter: "blur(4px)" }}>
           <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "16px", width: "100%", maxWidth: "380px", boxShadow: "0 10px 30px rgba(0,0,0,0.3)", position: "relative", border: "1px solid #eaeaea" }}>
             
-            {/* Tombol Close Silang */}
             <button 
               onClick={() => setIsWalletModalOpen(false)} 
               style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "#888" }}
@@ -227,12 +223,11 @@ function MainApp() {
               ✕
             </button>
 
-            <h3 style={{ margin: "0 0 10px 0", textAlign: "center", fontSize: "18px", color: "#111" }}>Select a Wallet</h3>
-            <p style={{ margin: "0 0 20px 0", textAlign: "center", fontSize: "12px", color: "#666" }}>Please select a wallet engine option to log into the settlement network.</p>
+            <h3 style={{ margin: "0 0 10px 0", textAlign: "center", fontSize: "18px", color: "#111" }}>Connect Your Wallet</h3>
+            <p style={{ margin: "0 0 20px 0", textAlign: "center", fontSize: "12px", color: "#666" }}>You need to connect a Web3 engine wallet before submitting this secure on-chain checkout payload.</p>
             
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               
-              {/* OPERASI FOX: Pilihan Utama MetaMask dengan Gambar CDN Resmi Terang */}
               <button 
                 onClick={handleMetaMaskNativeConnect} 
                 style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #ffe8cc", background: "#fffaf0", cursor: "pointer", fontWeight: "bold", fontSize: "14px", color: "#d9480f", textAlign: "left" }}
@@ -244,7 +239,6 @@ function MainApp() {
                 </div>
               </button>
 
-              {/* Loop Alternatif Wallet Lain Bawaan Wagmi */}
               {connectors.map((connector) => (
                 <button 
                   key={connector.uid} 
@@ -259,10 +253,6 @@ function MainApp() {
                 </button>
               ))}
 
-            </div>
-
-            <div style={{ marginTop: "20px", textAlign: "center", fontSize: "11px", color: "#aaa" }}>
-              Secure decentralized cross-border engine v2.0
             </div>
           </div>
         </div>
