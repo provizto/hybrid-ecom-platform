@@ -23,7 +23,7 @@ function MainApp() {
 
   const [dbLogs, setDbLogs] = useState([]);
 
-  // 🏪 State untuk Mengontrol Pop-up Modal Wallet Selector
+  // State untuk Mengontrol Pop-up Modal Wallet Selector
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
 
   const { address, isConnected } = useAccount();
@@ -101,7 +101,7 @@ function MainApp() {
     });
   };
 
-  // INTERSEPSI TOMBOL BELI: Jika belum konek dompet, buka pop-up dulu
+  // INTERSEPSI TOMBOL BELI: Jika belum konek dompet, buka pop-up modal selector
   const handleDirectBuy = (id, priceEth) => {
     if (!isConnected) {
       setIsWalletModalOpen(true);
@@ -137,52 +137,6 @@ function MainApp() {
     }, 2000);
   };
 
-  // NATIVE METAMASK BINDING
-  const handleMetaMaskNativeConnect = async () => {
-    if (typeof window !== "undefined" && window.ethereum) {
-      try {
-        const ethereum = window.ethereum;
-        const providers = ethereum.providers || [ethereum];
-        const metamaskProvider = providers.find((p) => p.isMetaMask) || providers[0];
-
-        if (metamaskProvider) {
-          const accounts = await metamaskProvider.request({ method: "eth_requestAccounts" });
-          console.log("MetaMask Terkoneksi:", accounts[0]);
-
-          try {
-            await metamaskProvider.request({
-              method: "wallet_switchEthereumChain",
-              params: [{ chainId: "0x7a69" }], 
-            });
-          } catch (switchError) {
-            if (switchError.code === 4902) {
-              await metamaskProvider.request({
-                method: "wallet_addEthereumChain",
-                params: [{
-                  chainId: "0x7a69",
-                  chainName: "Hardhat Local Node",
-                  nativeCurrency: { name: "Ethereum", symbol: "ETH", decimals: 18 },
-                  rpcUrls: ["http://127.0.0.1:8545"],
-                }],
-              });
-            }
-          }
-
-          const metamaskConnector = connectors.find(c => c.id === "io.metamask.wrapper" || c.id === "injected");
-          if (metamaskConnector) {
-            connect({ connector: metamaskConnector });
-          } else {
-            window.location.reload();
-          }
-        }
-      } catch (err) {
-        console.error("Gagal melakukan koneksi murni MetaMask:", err);
-      }
-    } else {
-      alert("Ekstensi MetaMask tidak terdeteksi, bosku!");
-    }
-  };
-
   const selectedProductData = WHITELABEL_PRODUCTS.find(p => p.id === Number(fiatProductId));
   const productPriceEth = selectedProductData ? Number(selectedProductData.defaultPriceEth) : 0.05;
   const convertedFiatPrice = selectedCurrency === "USD" 
@@ -192,7 +146,7 @@ function MainApp() {
   return (
     <div style={{ padding: "40px 20px", fontFamily: "sans-serif", color: "#1c1e21", maxWidth: "1000px", margin: "0 auto" }}>
       
-      {/* NAVBAR HEADER: BERSIH TANPA TOMBOL CONNECT */}
+      {/* NAVBAR HEADER: STERIL DARI TOMBOL KONEKSI LIAR */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #e1e8ed", paddingBottom: "20px", marginBottom: "30px" }}>
         <div>
           <h1 style={{ margin: 0, fontSize: "24px", color: "#0f1419" }}>🏪 {storeName ? String(storeName) : "Web3 Digital Core"}</h1>
@@ -211,7 +165,7 @@ function MainApp() {
         </div>
       </div>
 
-      {/* 📥 POP-UP MODAL SELEKTOR DOMPET */}
+      {/* 📥 POP-UP MODAL SELEKTOR DOMPET MURNI WAGMI BINDING */}
       {isWalletModalOpen && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 9999, backdropFilter: "blur(4px)" }}>
           <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "16px", width: "100%", maxWidth: "380px", boxShadow: "0 10px 30px rgba(0,0,0,0.3)", position: "relative", border: "1px solid #eaeaea" }}>
@@ -224,31 +178,23 @@ function MainApp() {
             </button>
 
             <h3 style={{ margin: "0 0 10px 0", textAlign: "center", fontSize: "18px", color: "#111" }}>Connect Your Wallet</h3>
-            <p style={{ margin: "0 0 20px 0", textAlign: "center", fontSize: "12px", color: "#666" }}>You need to connect a Web3 engine wallet before submitting this secure on-chain checkout payload.</p>
+            <p style={{ margin: "0 0 20px 0", textAlign: "center", fontSize: "12px", color: "#666" }}>Please select a wallet engine to complete your secure on-chain purchase.</p>
             
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               
-              <button 
-                onClick={handleMetaMaskNativeConnect} 
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #ffe8cc", background: "#fffaf0", cursor: "pointer", fontWeight: "bold", fontSize: "14px", color: "#d9480f", textAlign: "left" }}
-              >
-                <img src="https://cdnjs.cloudflare.com/ajax/libs/web3icons/2.0.2/wallets/metamask.svg" width="24" height="24" alt="MetaMask Fox" />
-                <div style={{ flex: 1 }}>
-                  <div>MetaMask Client</div>
-                  <div style={{ fontSize: "11px", fontWeight: "normal", color: "#999" }}>Direct Crypto Signature</div>
-                </div>
-              </button>
-
+              {/* Loop Semua Konektor Terdaftar di Wagmi Config (MetaMask, Backpack, dll.) */}
               {connectors.map((connector) => (
                 <button 
                   key={connector.uid} 
                   onClick={() => connect({ connector })} 
-                  style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e1e8ed", background: "#f8f9fa", cursor: "pointer", fontWeight: "bold", fontSize: "14px", color: "#0f1419", textAlign: "left" }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", borderRadius: "12px", border: "1px solid #e1e8ed", background: "#f8f9fa", cursor: "pointer", fontWeight: "bold", fontSize: "14px", color: "#0f1419", textAlign: "left", transition: "background 0.2s" }}
                 >
-                  <div style={{ width: "24px", height: "24px", borderRadius: "6px", background: "#0070f3", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "12px" }}>⚡</div>
+                  <div style={{ width: "24px", height: "24px", borderRadius: "6px", background: connector.name.toLowerCase().includes("metamask") ? "#e67e22" : "#0070f3", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "12px", fontWeight: "bold" }}>
+                    {connector.name.charAt(0).toUpperCase()}
+                  </div>
                   <div style={{ flex: 1 }}>
-                    <div>{connector.name === "Injected" ? "Backpack / Local Wallet" : connector.name}</div>
-                    <div style={{ fontSize: "11px", fontWeight: "normal", color: "#999" }}>Detected Browser Gateway</div>
+                    <div>{connector.name}</div>
+                    <div style={{ fontSize: "11px", fontWeight: "normal", color: "#999" }}>Secure Core Provider</div>
                   </div>
                 </button>
               ))}
