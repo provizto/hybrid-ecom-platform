@@ -1,8 +1,8 @@
+/** @type {import('@capacitor/cli').CapacitorConfig} */
 const config = {
   appId: 'com.haruntamale.hybridecom',
   appName: 'Hybrid Ecom Platform',
-  webDir: 'dist',
-  bundledWebRuntime: false,
+  webDir: 'dist', // 👈 Memastikan target mengarah ke folder build Vite, bukan www
   server: {
     cleartext: true,
     allowNavigation: ['*']
@@ -12,4 +12,5 @@ const config = {
   }
 };
 
-export default config;
+// Menggunakan module.exports agar dibaca sempurna oleh Capacitor CLI di Windows
+module.exports = config;
