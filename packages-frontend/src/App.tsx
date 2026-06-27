@@ -43,15 +43,6 @@ function MainApp() {
   const ETH_TO_USD_RATE = 3500;
   const ETH_TO_IDR_RATE = 54000000;
 
-  // SINKRONISASI OTOMATIS: Isi kolom alamat fiat jika wallet terhubung
-  useEffect(() => {
-    if (isConnected && address) {
-      setFiatBuyerAddress(address);
-    } else {
-      setFiatBuyerAddress("");
-    }
-  }, [isConnected, address]);
-
   useEffect(() => {
     let finalAbi: any = null;
     if (kontrakData && (kontrakData as any).abi) {
@@ -140,52 +131,6 @@ function MainApp() {
     }, 2000);
   };
 
-  // INTEGRASI MANUAL: Pemaksa koneksi MetaMask Injected ke Node Lokal Hardhat (Chain: 31337)
-  const handleMetaMaskNativeConnect = async () => {
-    if (typeof window !== "undefined" && (window as any).ethereum) {
-      try {
-        const provider = (window as any).ethereum;
-        // Request Akun Sultan
-        const accounts = await provider.request({ method: "eth_requestAccounts" });
-        console.log("MetaMask Connected Account #0:", accounts[0]);
-
-        // Alihkan paksa network MetaMask ke Chain ID Hardhat lokal (31337 -> Hex: 0x7a69)
-        try {
-          await provider.request({
-            method: "wallet_switchEthereumChain",
-            params: [{ chainId: "0x7a69" }], 
-          });
-        } catch (switchError: any) {
-          // Jika network lokal belum ada di daftar MetaMask, tambahkan otomatis
-          if (switchError.code === 4902) {
-            await provider.request({
-              method: "wallet_addEthereumChain",
-              params: [{
-                chainId: "0x7a69",
-                chainName: "Hardhat Local Node",
-                nativeCurrency: { name: "Ethereum", symbol: "ETH", decimals: 18 },
-                rpcUrls: ["http://127.0.0.1:8545"],
-              }],
-            });
-          }
-        }
-
-        // Cari konektor injected/metamask bawaan wagmi untuk sinkronisasi state global app
-        const metamaskConnector = connectors.find(c => c.id === "io.metamask.wrapper" || c.id === "injected");
-        if (metamaskConnector) {
-          connect({ connector: metamaskConnector });
-        } else {
-          window.location.reload(); // Fallback refresh jika state Wagmi terhambat cache
-        }
-
-      } catch (err) {
-        console.error("User menolak koneksi MetaMask:", err);
-      }
-    } else {
-      alert("Ekstensi MetaMask tidak ditemukan! Silakan instal MetaMask di browser lu, bosku.");
-    }
-  };
-
   // Hitung Nominal Harga Berdasarkan Produk yang Dipilih untuk Tampilan Form
   const selectedProductData = WHITELABEL_PRODUCTS.find(p => p.id === Number(fiatProductId));
   const productPriceEth = selectedProductData ? Number(selectedProductData.defaultPriceEth) : 0.05;
@@ -212,20 +157,10 @@ function MainApp() {
               <button onClick={() => disconnect()} style={{ background: "#ff4d4d", color: "white", border: "none", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>Sign Out</button>
             </div>
           ) : (
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-              {/* TOMBOL UTAMA METAMASK BYPASS (SULTAN NODE CONNECT) */}
-              <button 
-                onClick={handleMetaMaskNativeConnect} 
-                style={{ background: "#e67e22", color: "white", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
-              >
-                <img src="https://raw.githubusercontent.com/MetaMask/brand-resources/master/LOGOS/metamask-fox.svg" width="16" alt="MetaMask Fox" />
-                Connect MetaMask (10000 ETH Node)
-              </button>
-
-              {/* Loop Konektor Default / Cadangan Bawaan */}
+            <div style={{ display: "flex", gap: "8px" }}>
               {connectors.map((connector) => (
                 <button key={connector.uid} onClick={() => connect({ connector })} style={{ background: "#0070f3", color: "white", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
-                  {connector.name}
+                  Connect {connector.name}
                 </button>
               ))}
             </div>
