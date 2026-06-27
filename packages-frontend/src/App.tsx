@@ -43,6 +43,15 @@ function MainApp() {
   const ETH_TO_USD_RATE = 3500;
   const ETH_TO_IDR_RATE = 54000000;
 
+  // SINKRONISASI DOMPET: Otomatis isi kolom alamat fiat jika wallet terhubung
+  useEffect(() => {
+    if (isConnected && address) {
+      setFiatBuyerAddress(address);
+    } else {
+      setFiatBuyerAddress("");
+    }
+  }, [isConnected, address]);
+
   useEffect(() => {
     let finalAbi: any = null;
     if (kontrakData && (kontrakData as any).abi) {
@@ -131,6 +140,57 @@ function MainApp() {
     }, 2000);
   };
 
+  // PEMAKSA KONEKSI METAMASK NATIVE (Bypass pembajakan Injected Provider oleh dompet lain)
+  const handleMetaMaskNativeConnect = async () => {
+    if (typeof window !== "undefined" && (window as any).ethereum) {
+      try {
+        const ethereum = (window as any).ethereum;
+        
+        // Cek jika ada banyak provider (misal MetaMask + Backpack aktif bersamaan)
+        const providers = ethereum.providers || [ethereum];
+        const metamaskProvider = providers.find((p: any) => p.isMetaMask) || providers[0];
+
+        if (metamaskProvider) {
+          // Request akun murni dari target provider
+          const accounts = await metamaskProvider.request({ method: "eth_requestAccounts" });
+          console.log("MetaMask Terkoneksi:", accounts[0]);
+
+          // Alihkan paksa network ke Chain ID Hardhat lokal (31337 -> Hex: 0x7a69)
+          try {
+            await metamaskProvider.request({
+              method: "wallet_switchEthereumChain",
+              params: [{ chainId: "0x7a69" }], 
+            });
+          } catch (switchError: any) {
+            if (switchError.code === 4902) {
+              await metamaskProvider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x7a69",
+                  chainName: "Hardhat Local Node",
+                  nativeCurrency: { name: "Ethereum", symbol: "ETH", decimals: 18 },
+                  rpcUrls: ["http://127.0.0.1:8545"],
+                }],
+              });
+            }
+          }
+
+          // Sinkronisasikan ke Wagmi state agar UI mendeteksi status isConnected
+          const metamaskConnector = connectors.find(c => c.id === "io.metamask.wrapper" || c.id === "injected");
+          if (metamaskConnector) {
+            connect({ connector: metamaskConnector });
+          } else {
+            window.location.reload();
+          }
+        }
+      } catch (err) {
+        console.error("Gagal melakukan koneksi murni MetaMask:", err);
+      }
+    } else {
+      alert("Ekstensi MetaMask tidak terdeteksi di browser lu, bosku!");
+    }
+  };
+
   // Hitung Nominal Harga Berdasarkan Produk yang Dipilih untuk Tampilan Form
   const selectedProductData = WHITELABEL_PRODUCTS.find(p => p.id === Number(fiatProductId));
   const productPriceEth = selectedProductData ? Number(selectedProductData.defaultPriceEth) : 0.05;
@@ -157,10 +217,20 @@ function MainApp() {
               <button onClick={() => disconnect()} style={{ background: "#ff4d4d", color: "white", border: "none", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>Sign Out</button>
             </div>
           ) : (
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+              {/* FOX BUTTON: Dipaksa tampil di environment Vercel tanpa interupsi */}
+              <button 
+                onClick={handleMetaMaskNativeConnect} 
+                style={{ background: "#e67e22", color: "white", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
+              >
+                <img src="https://raw.githubusercontent.com/MetaMask/brand-resources/master/LOGOS/metamask-fox.svg" width="16" alt="MetaMask Fox" />
+                Connect MetaMask (10000 ETH)
+              </button>
+
+              {/* Loop Konektor Default / Cadangan Bawaan (Akan memunculkan opsi Injected/Backpack) */}
               {connectors.map((connector) => (
                 <button key={connector.uid} onClick={() => connect({ connector })} style={{ background: "#0070f3", color: "white", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
-                  Connect {connector.name}
+                  Connect {connector.name === "Injected" ? "Browser Wallet / Backpack" : connector.name}
                 </button>
               ))}
             </div>
