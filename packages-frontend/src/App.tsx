@@ -15,7 +15,7 @@ interface DbLog {
   productId: string;
   timestamp: string;
   txHash: string;
-  currencyMethod: string; // Tambahan log pelacak mata uang
+  currencyMethod: string;
 }
 
 function MainApp() {
@@ -28,9 +28,12 @@ function MainApp() {
   const [fiatBuyerAddress, setFiatBuyerAddress] = useState<string>("");
   const [fiatProductId, setFiatProductId] = useState<string>("3");
   const [fiatPaymentStatus, setFiatPaymentStatus] = useState<string>("IDLE");
-  const [selectedCurrency, setSelectedCurrency] = useState<string>("USD"); // Default ke USD untuk Pasar Global
+  const [selectedCurrency, setSelectedCurrency] = useState<string>("USD");
 
   const [dbLogs, setDbLogs] = useState<DbLog[]>([]);
+
+  // 🏪 STATE BARU: Untuk Mengontrol Pop-up Modal Wallet Selector
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState<boolean>(false);
 
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
@@ -39,14 +42,14 @@ function MainApp() {
   const { writeContract, isPending: isTxPending, error: txError, data: txHash } = useWriteContract();
   const currentContractAddress = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}` | undefined;
 
-  // Simulasi Kurs Nilai Tukar Fixed (Bisa ditarik dari API CoinGecko di masa depan)
   const ETH_TO_USD_RATE = 3500;
   const ETH_TO_IDR_RATE = 54000000;
 
-  // SINKRONISASI DOMPET: Otomatis isi kolom alamat fiat jika wallet terhubung
+  // Otomatis tutup modal begitu koneksi sukses + sinkronisasi alamat form
   useEffect(() => {
     if (isConnected && address) {
       setFiatBuyerAddress(address);
+      setIsWalletModalOpen(false); // Otomatis tutup pop-up begitu sukses konek
     } else {
       setFiatBuyerAddress("");
     }
@@ -59,7 +62,6 @@ function MainApp() {
     } else if (kontrakData && (kontrakData as any).default && (kontrakData as any).default.abi) {
       finalAbi = (kontrakData as any).default.abi;
     }
-
     if (finalAbi) setParsedAbi(finalAbi);
   }, []);
 
@@ -70,7 +72,6 @@ function MainApp() {
     query: { enabled: !!parsedAbi && !!currentContractAddress }
   });
 
-  // Watch Blockchain Events & Sync with Meta currency state
   useWatchContractEvent({
     address: currentContractAddress,
     abi: parsedAbi || [],
@@ -140,22 +141,18 @@ function MainApp() {
     }, 2000);
   };
 
-  // PEMAKSA KONEKSI METAMASK NATIVE (Bypass pembajakan Injected Provider oleh dompet lain)
+  // NATIVE METAMASK PROVIDER FORCED BINDING
   const handleMetaMaskNativeConnect = async () => {
     if (typeof window !== "undefined" && (window as any).ethereum) {
       try {
         const ethereum = (window as any).ethereum;
-        
-        // Cek jika ada banyak provider (misal MetaMask + Backpack aktif bersamaan)
         const providers = ethereum.providers || [ethereum];
         const metamaskProvider = providers.find((p: any) => p.isMetaMask) || providers[0];
 
         if (metamaskProvider) {
-          // Request akun murni dari target provider
           const accounts = await metamaskProvider.request({ method: "eth_requestAccounts" });
           console.log("MetaMask Terkoneksi:", accounts[0]);
 
-          // Alihkan paksa network ke Chain ID Hardhat lokal (31337 -> Hex: 0x7a69)
           try {
             await metamaskProvider.request({
               method: "wallet_switchEthereumChain",
@@ -175,7 +172,6 @@ function MainApp() {
             }
           }
 
-          // Sinkronisasikan ke Wagmi state agar UI mendeteksi status isConnected
           const metamaskConnector = connectors.find(c => c.id === "io.metamask.wrapper" || c.id === "injected");
           if (metamaskConnector) {
             connect({ connector: metamaskConnector });
@@ -187,11 +183,10 @@ function MainApp() {
         console.error("Gagal melakukan koneksi murni MetaMask:", err);
       }
     } else {
-      alert("Ekstensi MetaMask tidak terdeteksi di browser lu, bosku!");
+      alert("Ekstensi MetaMask tidak terdeteksi, bosku!");
     }
   };
 
-  // Hitung Nominal Harga Berdasarkan Produk yang Dipilih untuk Tampilan Form
   const selectedProductData = WHITELABEL_PRODUCTS.find(p => p.id === Number(fiatProductId));
   const productPriceEth = selectedProductData ? Number(selectedProductData.defaultPriceEth) : 0.05;
   const convertedFiatPrice = selectedCurrency === "USD" 
@@ -217,26 +212,70 @@ function MainApp() {
               <button onClick={() => disconnect()} style={{ background: "#ff4d4d", color: "white", border: "none", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>Sign Out</button>
             </div>
           ) : (
-            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-              {/* FOX BUTTON: Dipaksa tampil di environment Vercel tanpa interupsi */}
-              <button 
-                onClick={handleMetaMaskNativeConnect} 
-                style={{ background: "#e67e22", color: "white", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
-              >
-                <img src="https://raw.githubusercontent.com/MetaMask/brand-resources/master/LOGOS/metamask-fox.svg" width="16" alt="MetaMask Fox" />
-                Connect MetaMask (10000 ETH)
-              </button>
-
-              {/* Loop Konektor Default / Cadangan Bawaan (Akan memunculkan opsi Injected/Backpack) */}
-              {connectors.map((connector) => (
-                <button key={connector.uid} onClick={() => connect({ connector })} style={{ background: "#0070f3", color: "white", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
-                  Connect {connector.name === "Injected" ? "Browser Wallet / Backpack" : connector.name}
-                </button>
-              ))}
-            </div>
+            /* TOMBOL PEMICU MODAL UTAMA */
+            <button 
+              onClick={() => setIsWalletModalOpen(true)} 
+              style={{ background: "#0070f3", color: "white", border: "none", padding: "10px 18px", borderRadius: "25px", cursor: "pointer", fontWeight: "bold", fontSize: "14px", boxShadow: "0 4px 6px rgba(0,112,243,0.2)", transition: "all 0.2s" }}
+            >
+              🔌 Connect Wallet
+            </button>
           )}
         </div>
       </div>
+
+      {/* 📥 DYNAMIC POP-UP MODAL ENGINE (RAINBOWKIT LOOK-ALIKE) */}
+      {isWalletModalOpen && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.6)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 9999, backdropFilter: "blur(4px)" }}>
+          <div style={{ backgroundColor: "white", padding: "30px", borderRadius: "16px", width: "100%", maxWidth: "380px", boxShadow: "0 10px 30px rgba(0,0,0,0.3)", position: "relative", border: "1px solid #eaeaea" }}>
+            
+            {/* Tombol Close Silang */}
+            <button 
+              onClick={() => setIsWalletModalOpen(false)} 
+              style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "#888" }}
+            >
+              ✕
+            </button>
+
+            <h3 style={{ margin: "0 0 10px 0", textAlign: "center", fontSize: "18px", color: "#111" }}>Select a Wallet</h3>
+            <p style={{ margin: "0 0 20px 0", textAlign: "center", fontSize: "12px", color: "#666" }}>Please select a wallet engine option to log into the settlement network.</p>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              
+              {/* OPERASI FOX: Murni MetaMask */}
+              <button 
+                onClick={handleMetaMaskNativeConnect} 
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #ffe8cc", background: "#fffaf0", cursor: "pointer", fontWeight: "bold", fontSize: "14px", color: "#d9480f", textAlign: "left", transition: "background 0.2s" }}
+              >
+                <img src="https://raw.githubusercontent.com/MetaMask/brand-resources/master/LOGOS/metamask-fox.svg" width="24" alt="MetaMask Fox" />
+                <div style={{ flex: 1 }}>
+                  <div>MetaMask Client</div>
+                  <div style={{ fontSize: "11px", fontWeight: "normal", color: "#999" }}>Direct Crypto Signature</div>
+                </div>
+              </button>
+
+              {/* OPERASI INJECTED: Backpack / Browser Extension Lain */}
+              {connectors.map((connector) => (
+                <button 
+                  key={connector.uid} 
+                  onClick={() => connect({ connector })} 
+                  style={{ width: "100%", display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e1e8ed", background: "#f8f9fa", cursor: "pointer", fontWeight: "bold", fontSize: "14px", color: "#0f1419", textAlign: "left" }}
+                >
+                  <div style={{ width: "24px", height: "24px", borderRadius: "6px", background: "#0070f3", color: "white", display: "flex", justifyContent: "center", alignItems: "center", fontSize: "12px" }}>⚡</div>
+                  <div style={{ flex: 1 }}>
+                    <div>{connector.name === "Injected" ? "Backpack / Local Wallet" : connector.name}</div>
+                    <div style={{ fontSize: "11px", fontWeight: "normal", color: "#999" }}>Detected Browser Gateway</div>
+                  </div>
+                </button>
+              ))}
+
+            </div>
+
+            <div style={{ marginTop: "20px", textAlign: "center", fontSize: "11px", color: "#aaa" }}>
+              Secure decentralized cross-border engine v2.0
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* TRANSACTIONS BROADCAST MONITOR */}
       {(isTxPending || txHash || txError || fiatPaymentStatus === "PROCESSING") && (
@@ -330,7 +369,6 @@ function MainApp() {
               </select>
             </div>
 
-            {/* LIVE CONVERSION RATE PREVIEW DISINI */}
             <div style={{ background: "#fff", padding: "10px", borderRadius: "6px", border: "1px solid #ffe8cc", fontSize: "13px", margin: "5px 0" }}>
               <strong>Calculated Billing Value:</strong> <span style={{ color: "#d9480f", fontWeight: "bold" }}>{convertedFiatPrice}</span> 
               <span style={{ fontSize: "11px", color: "#868e96", marginLeft: "5px" }}>({selectedProductData?.defaultPriceEth} ETH Equiv)</span>
