@@ -1,0 +1,110 @@
+===================================================================
+DEVELOPER API INTEGRATION GUIDE - WEB3 DIGITAL CORE HYBRID GATEWAY
+===================================================================
+
+Thank you for purchasing SKU-02: Developer API Access Token. 
+This access token enables you to seamlessly connect your external systems, 
+applications, or e-commerce platforms to our Hybrid Gateway Core Engine 
+to process both Fiat & Web3 on-chain transactions.
+
+1. BASE URL (API ENDPOINT)
+   Staging/Production: https://[YOUR-VERCEL-DOMAIN].vercel.app/api/v1
+
+2. AUTHENTICATION (HEADERS)
+   Every API request must include your purchased access token in the 
+   Authorization header as a Bearer token:
+   
+   Authorization: Bearer <YOUR_API_ACCESS_TOKEN>
+   Content-Type: application/json
+
+3. INTEGRATION SCENARIOS
+   
+   A. Triggering Fiat Relay Mint (Backend-to-Contract)
+      Execute this endpoint when your backend system detects a successful 
+      traditional fiat payment (via Stripe Credit Card, QRIS, or Virtual Account). 
+      Our core engine will automatically relay the transaction to the blockchain 
+      and mint the license asset directly to the client's destination wallet.
+
+      POST /settlement/fiat-relay
+      
+      Payload (JSON):
+      {
+        "buyerAddress": "0xClientDestinationWalletAddress",
+        "productId": 1,
+        "tokenUri": "https://aws-s3-digital-goods-store.com/metadata/product-1.json"
+      }
+
+      Success Response (200 OK):
+      {
+        "status": "SUCCESS",
+        "message": "Relay mint transaction broadcasted successfully",
+        "txHash": "0x78abc..."
+      }
+
+   B. Order Logs & Event Synchronization (Webhook)
+      Our smart contract emits an 'NFTOwnershipMinted' event upon every 
+      successful transaction ledger settlement. You can poll or listen to 
+      these public logs on our unified interface to ensure that the asset 
+      ownership status is fully synchronized with your internal database.
+
+4. ERROR HANDLING
+   - 401 Unauthorized: Invalid, missing, or expired API Access Token.
+   - 400 Bad Request: Invalid parameters, malformed wallet address, or unregistered Product ID.
+   - 500 Internal Server Error: RPC node failure or temporary blockchain congestion.
+
+For further technical support or customized whitelabel configurations, 
+please contact the system operator through your dedicated business channel.
+===================================================================
+
+
+===================================================================
+DEVELOPER API INTEGRATION GUIDE - WEB3 DIGITAL CORE HYBRID GATEWAY
+===================================================================
+
+Terima kasih telah membeli SKU-02: Developer API Access Token. 
+Dengan token ini, Anda dapat menghubungkan sistem eksternal/website Anda 
+ke Core Engine Hybrid Gateway kami untuk memproses pembayaran Fiat & Web3.
+
+1. ENDPOINT UTAMA (BASE URL)
+   Staging/Production: https://[DOMAIN-VERCEL-ANDA].vercel.app/api/v1
+
+2. AUTENTIKASI (HEADERS)
+   Setiap request wajib menyertakan token akses yang telah Anda beli pada header:
+   Authorization: Bearer <API_ACCESS_TOKEN_ANDA>
+   Content-Type: application/json
+
+3. SKENARIO INTEGRASI
+   
+   A. Memicu Pembayaran Fiat Relay Mint (Backend-to-Contract)
+      Gunakan endpoint ini ketika aplikasi Anda mendeteksi pembayaran uang fiat 
+      (Stripe/QRIS) telah sukses di sisi server Anda, dan Anda ingin sistem kami 
+      melakukan minting NFT lisensi ke dompet pembeli secara otomatis.
+
+      POST /settlement/fiat-relay
+      
+      Payload (JSON):
+      {
+        "buyerAddress": "0xAlamatWalletTujuanKlien",
+        "productId": 1,
+        "tokenUri": "https://aws-s3-digital-goods-store.com/metadata/product-1.json"
+      }
+
+      Response Sukses (200 OK):
+      {
+        "status": "SUCCESS",
+        "message": "Relay mint transaction broadcasted successfully",
+        "txHash": "0x78abc..."
+      }
+
+   B. Sinkronisasi Log Transaksi (Webhook Event)
+      Sistem kami memancarkan event 'NFTOwnershipMinted' setiap kali ada transaksi 
+      sukses. Anda dapat melakukan polling atau mendengarkan log global pada interface
+      terintegrasi untuk memastikan status kepemilikan aset pembeli telah sinkron.
+
+4. ERROR HANDLING
+   - 401 Unauthorized: Token API tidak valid atau kedaluwarsa.
+   - 400 Bad Request: Parameter alamat wallet atau ID Produk salah/tidak terdaftar.
+   - 500 Internal Server Error: Gangguan pada node blockchain RPC penyedia layanan.
+
+Untuk dukungan teknis lebih lanjut, silakan hubungi tim operator melalui saluran resmi.
+===================================================================
