@@ -106,9 +106,8 @@ function MainApp() {
     writeContract({
       address: currentContractAddress,
       abi: parsedAbi,
-      functionName: "buyDigitalGood",
-      args: [BigInt(id), dummyAwsTokenUri],
-      value: parseEther(priceEth),
+      functionName: "mintForFiatBuyer",
+      args: [address, dummyAwsTokenUri, BigInt(id)],
     });
   };
 
