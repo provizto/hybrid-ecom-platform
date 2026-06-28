@@ -100,8 +100,12 @@ function MainApp() {
     });
   };
 
-  const handleDirectBuy = (id: number, priceEth: string) => {
-    if (!parsedAbi || !currentContractAddress) return;
+  const handleDirectBuy = (id, priceEth) => {
+  if (!isConnected || !address) {
+    setIsWalletModalOpen(true);
+    return;
+  }
+  if (!parsedAbi || !currentContractAddress) return;
     const dummyAwsTokenUri = `https://aws-s3-digital-goods-store.com/metadata/product-${id}.json`;
     writeContract({
       address: currentContractAddress,
