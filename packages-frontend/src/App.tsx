@@ -31,6 +31,7 @@ function MainApp() {
   const [selectedCurrency, setSelectedCurrency] = useState<string>("USD"); // Default ke USD untuk Pasar Global
 
   const [dbLogs, setDbLogs] = useState<DbLog[]>([]);
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState<boolean>(false);
 
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
@@ -89,6 +90,26 @@ function MainApp() {
     },
   });
 
+  // Fungsi koneksi manual khusus penjinak Kiwi Browser / Mobile Environments
+  const connectManualInjected = async () => {
+    if (typeof window !== "undefined" && (window as any).ethereum) {
+      try {
+        await (window as any).ethereum.request({ method: "eth_requestAccounts" });
+        window.location.reload();
+      } catch (error) {
+        console.error("User rejected mobile wallet injected invitation", error);
+      }
+    } else {
+      // Jika diakses lewat browser mobile biasa, tawarkan fallback konektor wagmi standar
+      const injectedConnector = connectors.find((c) => c.id === "injected");
+      if (injectedConnector) {
+        connect({ connector: injectedConnector });
+      } else if (connectors.length > 0) {
+        connect({ connector: connectors[0] });
+      }
+    }
+  };
+
   const handleSetPrice = (e: React.FormEvent) => {
     e.preventDefault();
     if (!parsedAbi || !currentContractAddress) return;
@@ -100,12 +121,13 @@ function MainApp() {
     });
   };
 
-  const handleDirectBuy = (id, priceEth) => {
-  if (!isConnected || !address) {
-    setIsWalletModalOpen(true);
-    return;
-  }
-  if (!parsedAbi || !currentContractAddress) return;
+  const handleDirectBuy = (id: any, priceEth: any) => {
+    if (!isConnected || !address) {
+      setIsWalletModalOpen(true);
+      connectManualInjected();
+      return;
+    }
+    if (!parsedAbi || !currentContractAddress) return;
     const dummyAwsTokenUri = `https://aws-s3-digital-goods-store.com/metadata/product-${id}.json`;
     writeContract({
       address: currentContractAddress,
@@ -142,7 +164,17 @@ function MainApp() {
     : `Rp ${(productPriceEth * ETH_TO_IDR_RATE).toLocaleString("id-ID")}`;
 
   return (
-    <div style={{ padding: "40px 20px", fontFamily: "sans-serif", color: "#1c1e21", maxWidth: "1000px", margin: "0 auto" }}>
+    <div style={{ 
+      backgroundColor: "#fff9f1", 
+      color: "#1c1e21", 
+      minHeight: "100vh", 
+      width: "100%", 
+      padding: "40px 20px", 
+      fontFamily: "sans-serif", 
+      maxWidth: "1000px", 
+      margin: "0 auto",
+      boxSizing: "border-box" 
+    }}>
       
       {/* NAVBAR HEADER */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #e1e8ed", paddingBottom: "20px", marginBottom: "30px" }}>
@@ -160,10 +192,13 @@ function MainApp() {
               <button onClick={() => disconnect()} style={{ background: "#ff4d4d", color: "white", border: "none", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>Sign Out</button>
             </div>
           ) : (
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <button onClick={connectManualInjected} style={{ background: "#0070f3", color: "white", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
+                Connect Wallet (Kiwi/Injected)
+              </button>
               {connectors.map((connector) => (
-                <button key={connector.uid} onClick={() => connect({ connector })} style={{ background: "#0070f3", color: "white", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
-                  Connect {connector.name}
+                <button key={connector.uid} onClick={() => connect({ connector })} style={{ background: "#f0f0f0", color: "#333", border: "1px solid #ccc", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
+                  {connector.name}
                 </button>
               ))}
             </div>
@@ -171,9 +206,16 @@ function MainApp() {
         </div>
       </div>
 
+      {/* DUMMY HIDDEN ALERT FOR TS SATISFACTION */}
+      {isWalletModalOpen && !isConnected && (
+        <div style={{ background: "#fff3cd", padding: "10px", borderRadius: "6px", marginBottom: "15px", fontSize: "12px", color: "#856404" }}>
+          ⚠️ Action triggered. Invoking mobile browser cryptographic connection...
+        </div>
+      )}
+
       {/* TRANSACTIONS BROADCAST MONITOR */}
       {(isTxPending || txHash || txError || fiatPaymentStatus === "PROCESSING") && (
-        <div style={{ background: "#f8f9fa", padding: "15px", borderRadius: "8px", marginBottom: "30px", border: "1px solid #dee2e6" }}>
+        <div style={{ background: "#ffffff", padding: "15px", borderRadius: "8px", marginBottom: "30px", border: "1px solid #dee2e6" }}>
           <h4 style={{ marginTop: 0, marginBottom: "5px" }}>⚡ System Broadcast Monitor:</h4>
           {fiatPaymentStatus === "PROCESSING" && (
             <p style={{ color: "#1a73e8", margin: 0, fontSize: "14px" }}>
@@ -239,26 +281,26 @@ function MainApp() {
           <form onSubmit={handleFiatSimulationSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "15px" }}>
             <div>
               <label style={{ display: "block", fontSize: "11px", fontWeight: "bold", marginBottom: "5px" }}>1. Choose Target Currency Settlement Option:</label>
-              <div style={{ display: "flex", gap: "15px" }}>
+              <div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
                 <label style={{ fontSize: "13px", fontWeight: "bold", cursor: "pointer" }}>
                   <input type="radio" name="currency" value="USD" checked={selectedCurrency === "USD"} onChange={() => setSelectedCurrency("USD")} style={{ marginRight: "5px" }} />
-                  🇺🇸 United States Dolar (USD / Stripe Card)
+                  🇺🇸 United States Dollar (USD)
                 </label>
                 <label style={{ fontSize: "13px", fontWeight: "bold", cursor: "pointer" }}>
                   <input type="radio" name="currency" value="IDR" checked={selectedCurrency === "IDR"} onChange={() => setSelectedCurrency("IDR")} style={{ marginRight: "5px" }} />
-                  🇮🇩 Indonesian Rupiah (IDR / QRIS)
+                  🇮🇩 Indonesian Rupiah (IDR)
                 </label>
               </div>
             </div>
 
             <div style={{ marginTop: "5px" }}>
               <label style={{ display: "block", fontSize: "11px", fontWeight: "bold", marginBottom: "3px" }}>2. Target Client Wallet Destination Address:</label>
-              <input type="text" value={fiatBuyerAddress} onChange={(e) => setFiatBuyerAddress(e.target.value)} placeholder="0x... (Recipient asset delivery address)" style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px" }} required />
+              <input type="text" value={fiatBuyerAddress} onChange={(e) => setFiatBuyerAddress(e.target.value)} placeholder="0x... (Recipient asset delivery address)" style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", boxSizing: "border-box" }} required />
             </div>
 
             <div>
               <label style={{ display: "block", fontSize: "11px", fontWeight: "bold", marginBottom: "3px" }}>3. Select Solutions Product:</label>
-              <select value={fiatProductId} onChange={(e) => setFiatProductId(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px" }}>
+              <select value={fiatProductId} onChange={(e) => setFiatProductId(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", boxSizing: "border-box" }}>
                 {WHITELABEL_PRODUCTS.map((p: Product) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
@@ -269,7 +311,7 @@ function MainApp() {
               <span style={{ fontSize: "11px", color: "#868e96", marginLeft: "5px" }}>({selectedProductData?.defaultPriceEth} ETH Equiv)</span>
             </div>
 
-            <button type="submit" disabled={!isConnected || fiatPaymentStatus === "PROCESSING"} style={{ width: "100%", background: "#e67e22", color: "white", border: "none", padding: "11px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
+            <button type="submit" disabled={fiatPaymentStatus === "PROCESSING"} style={{ width: "100%", background: "#e67e22", color: "white", border: "none", padding: "11px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
               {fiatPaymentStatus === "PROCESSING" 
                 ? `Authorizing Secure ${selectedCurrency} Gateway Flow...` 
                 : `Simulate Successful Checkout via ${selectedCurrency}`}
@@ -285,11 +327,11 @@ function MainApp() {
         <form onSubmit={handleSetPrice} style={{ display: "flex", flexWrap: "wrap", gap: "15px", alignItems: "end" }}>
           <div style={{ flex: "1", minWidth: "150px" }}>
             <label style={{ display: "block", fontSize: "12px", fontWeight: "bold", marginBottom: "5px" }}>Product Target ID:</label>
-            <input type="number" value={adminProductId} onChange={(e) => setAdminProductId(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #ccc" }} required />
+            <input type="number" value={adminProductId} onChange={(e) => setAdminProductId(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #ccc", boxSizing: "border-box" }} required />
           </div>
           <div style={{ flex: "1", minWidth: "150px" }}>
             <label style={{ display: "block", fontSize: "12px", fontWeight: "bold", marginBottom: "5px" }}>New Ledger Rate (ETH):</label>
-            <input type="text" value={adminPrice} onChange={(e) => setAdminPrice(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #ccc" }} required />
+            <input type="text" value={adminPrice} onChange={(e) => setAdminPrice(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #ccc", boxSizing: "border-box" }} required />
           </div>
           <button type="submit" disabled={!isConnected || isTxPending} style={{ background: "#ae3ec9", color: "white", border: "none", padding: "11px 20px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" }}>
             Override Price Rate
