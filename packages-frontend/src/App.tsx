@@ -15,7 +15,7 @@ interface DbLog {
   productId: string;
   timestamp: string;
   txHash: string;
-  currencyMethod: string; // Tambahan log pelacak mata uang
+  currencyMethod: string;
 }
 
 function MainApp() {
@@ -28,10 +28,13 @@ function MainApp() {
   const [fiatBuyerAddress, setFiatBuyerAddress] = useState<string>("");
   const [fiatProductId, setFiatProductId] = useState<string>("3");
   const [fiatPaymentStatus, setFiatPaymentStatus] = useState<string>("IDLE");
-  const [selectedCurrency, setSelectedCurrency] = useState<string>("USD"); // Default ke USD untuk Pasar Global
+  const [selectedCurrency, setSelectedCurrency] = useState<string>("USD"); 
 
   const [dbLogs, setDbLogs] = useState<DbLog[]>([]);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState<boolean>(false);
+  
+  // 🏪 State Baru: Mengontrol Pop-up Barcode QRIS Indonesia
+  const [showQrisModal, setShowQrisModal] = useState<boolean>(false);
 
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
@@ -40,7 +43,6 @@ function MainApp() {
   const { writeContract, isPending: isTxPending, error: txError, data: txHash } = useWriteContract();
   const currentContractAddress = import.meta.env.VITE_CONTRACT_ADDRESS as `0x${string}` | undefined;
 
-  // Simulasi Kurs Nilai Tukar Fixed (Bisa ditarik dari API CoinGecko di masa depan)
   const ETH_TO_USD_RATE = 3500;
   const ETH_TO_IDR_RATE = 54000000;
 
@@ -51,7 +53,6 @@ function MainApp() {
     } else if (kontrakData && (kontrakData as any).default && (kontrakData as any).default.abi) {
       finalAbi = (kontrakData as any).default.abi;
     }
-
     if (finalAbi) setParsedAbi(finalAbi);
   }, []);
 
@@ -62,7 +63,6 @@ function MainApp() {
     query: { enabled: !!parsedAbi && !!currentContractAddress }
   });
 
-  // Watch Blockchain Events & Sync with Meta currency state
   useWatchContractEvent({
     address: currentContractAddress,
     abi: parsedAbi || [],
@@ -82,7 +82,7 @@ function MainApp() {
             productId: productNum,
             timestamp: new Date().toLocaleTimeString(),
             txHash: log.transactionHash || "0x...",
-            currencyMethod: selectedCurrency === "USD" ? "USD Credit Card" : "IDR VA/QRIS"
+            currencyMethod: selectedCurrency === "USD" ? "USD Credit Card (Stripe)" : "IDR QRIS / e-Wallet"
           };
           setDbLogs((prev) => [newLog, ...prev]);
         }
@@ -90,18 +90,17 @@ function MainApp() {
     },
   });
 
-  // Fungsi koneksi manual khusus penjinak Kiwi Browser / Mobile Environments
+  // Fungsi koneksi cerdas pendeteksi MetaMask, Backpack, Phantom, & Injected
   const connectManualInjected = async () => {
     if (typeof window !== "undefined" && (window as any).ethereum) {
       try {
         await (window as any).ethereum.request({ method: "eth_requestAccounts" });
         window.location.reload();
       } catch (error) {
-        console.error("User rejected mobile wallet injected invitation", error);
+        console.error("User rejected mobile wallet connection", error);
       }
     } else {
-      // Jika diakses lewat browser mobile biasa, tawarkan fallback konektor wagmi standar
-      const injectedConnector = connectors.find((c) => c.id === "injected");
+      const injectedConnector = connectors.find((c) => c.id === "injected" || c.id === "io.metamask.wrapper");
       if (injectedConnector) {
         connect({ connector: injectedConnector });
       } else if (connectors.length > 0) {
@@ -137,10 +136,22 @@ function MainApp() {
     });
   };
 
+  // EKSEKUSI PEMBAYARAN FIAT HYBRID
   const handleFiatSimulationSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!parsedAbi || !currentContractAddress || !fiatBuyerAddress) return;
 
+    if (selectedCurrency === "IDR") {
+      // 🇮🇩 Jalur Interseptor QRIS: Munculkan Modul Barcode Terlebih Dahulu!
+      setShowQrisModal(true);
+    } else {
+      // 🇺🇸 Jalur Standard USD Credit Card
+      executeOnChainRelayMint();
+    }
+  };
+
+  const executeOnChainRelayMint = () => {
+    setShowQrisModal(false);
     setFiatPaymentStatus("PROCESSING");
 
     setTimeout(() => {
@@ -153,10 +164,9 @@ function MainApp() {
         functionName: "mintForFiatBuyer",
         args: [fiatBuyerAddress as `0x${string}`, dummyAwsTokenUri, BigInt(fiatProductId)],
       });
-    }, 2000);
+    }, 1500);
   };
 
-  // Hitung Nominal Harga Berdasarkan Produk yang Dipilih untuk Tampilan Form
   const selectedProductData = WHITELABEL_PRODUCTS.find(p => p.id === Number(fiatProductId));
   const productPriceEth = selectedProductData ? Number(selectedProductData.defaultPriceEth) : 0.05;
   const convertedFiatPrice = selectedCurrency === "USD" 
@@ -194,22 +204,37 @@ function MainApp() {
           ) : (
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               <button onClick={connectManualInjected} style={{ background: "#0070f3", color: "white", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
-                Connect Wallet (Kiwi/Injected)
+                Connect Extension (MetaMask/Backpack/Phantom)
               </button>
-              {connectors.map((connector) => (
-                <button key={connector.uid} onClick={() => connect({ connector })} style={{ background: "#f0f0f0", color: "#333", border: "1px solid #ccc", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
-                  {connector.name}
-                </button>
-              ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* DUMMY HIDDEN ALERT FOR TS SATISFACTION */}
-      {isWalletModalOpen && !isConnected && (
-        <div style={{ background: "#fff3cd", padding: "10px", borderRadius: "6px", marginBottom: "15px", fontSize: "12px", color: "#856404" }}>
-          ⚠️ Action triggered. Invoking mobile browser cryptographic connection...
+      {/* 📥 DYNAMIC POP-UP MODAL QRIS INDONESIA */}
+      {showQrisModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.7)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 99999 }}>
+          <div style={{ backgroundColor: "#ffffff", padding: "30px", borderRadius: "16px", width: "100%", maxWidth: "360px", textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+              <span style={{ fontWeight: "bold", color: "#d9480f", fontSize: "16px" }}>GPN / QRIS STANDAR NASIONAL</span>
+              <button onClick={() => setShowQrisModal(false)} style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "#888" }}>✕</button>
+            </div>
+            
+            <p style={{ fontSize: "13px", color: "#495057", margin: "0 0 15px 0" }}>Pindai kode QR di bawah menggunakan GoPay, OVO, Dana, ShopeePay, atau Mobile Banking untuk melunasi lisensi digital B2B.</p>
+            
+            {/* Simulasi Gambar Kotak QRIS Asli */}
+            <div style={{ background: "#f8f9fa", padding: "15px", borderRadius: "10px", display: "inline-block", border: "2px solid #e9ecef" }}>
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=WhitelabelGatewaySettlementSimulation" alt="QRIS Core Engine" width="180" height="180" />
+            </div>
+
+            <div style={{ background: "#fff3cd", color: "#856404", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "bold", margin: "15px 0" }}>
+              Total Tagihan: {convertedFiatPrice}
+            </div>
+
+            <button onClick={executeOnChainRelayMint} style={{ width: "100%", background: "#10b981", color: "#ffffff", border: "none", padding: "12px", borderRadius: "8px", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}>
+              Konfirmasi Pembayaran Sukses (Simulasi)
+            </button>
+          </div>
         </div>
       )}
 
@@ -305,7 +330,6 @@ function MainApp() {
               </select>
             </div>
 
-            {/* LIVE CONVERSION RATE PREVIEW DISINI */}
             <div style={{ background: "#fff", padding: "10px", borderRadius: "6px", border: "1px solid #ffe8cc", fontSize: "13px", margin: "5px 0" }}>
               <strong>Calculated Billing Value:</strong> <span style={{ color: "#d9480f", fontWeight: "bold" }}>{convertedFiatPrice}</span> 
               <span style={{ fontSize: "11px", color: "#868e96", marginLeft: "5px" }}>({selectedProductData?.defaultPriceEth} ETH Equiv)</span>
