@@ -218,7 +218,7 @@ function MainApp() {
     }, 1500);
   };
 
-  // 📡 INTEGRASI TOTAL JALUR VERCEL API & ZONIQFI ONE-ROUTING
+  // 📡 INTEGRASI DETEKTOR UTAMA JALUR BACKEND LOCALHOST PORT 5000
   const handleFiatSimulationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -229,8 +229,8 @@ function MainApp() {
     if (selectedCurrency === "IDR") {
       setIsFetchingQris(true);
       try {
-        // 🔥 Menggunakan URL Relatif agar otomatis menembak serverless route zoniqfi.com/api/charge-qris
-        const response = await fetch("/api/charge-qris", {
+        // 🚀 Ditembak langsung ke gerbang backend lokal laptop lu
+        const response = await fetch("http://localhost:5000/api/charge-qris", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -240,14 +240,20 @@ function MainApp() {
         });
         
         const data = await response.json();
+        
         if (data.success && data.qrUrl) {
           setDynamicQrisUrl(data.qrUrl); 
+          console.log("🎯 Sukses! QRIS Midtrans Berhasil Masuk:", data.qrUrl);
         } else {
           setDynamicQrisUrl(fallbackQrisUrl);
+          // Detektor jika server lu hidup tapi ditolak Midtrans (Server Key Bermasalah)
+          alert("❌ Backend merespon tapi Midtrans menolak!\nPesan: " + JSON.stringify(data));
         }
-      } catch (err) {
-        console.warn("API Serverless routing bypass option triggered...", err);
+      } catch (err: any) {
+        console.warn("Koneksi tersumbat sebelum sampai backend...", err);
         setDynamicQrisUrl(fallbackQrisUrl);
+        // Detektor jika port server mati atau browser memblokir jalur data
+        alert("⚠️ KONEKSI BLOCKED/GAGAL!\nFrontend gagal mengetuk Backend Port 5000.\nDetail: " + err.message);
       } finally {
         setIsFetchingQris(false);
         setShowQrisModal(true); 
