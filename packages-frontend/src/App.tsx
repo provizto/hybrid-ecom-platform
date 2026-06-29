@@ -34,6 +34,10 @@ function MainApp() {
   
   // 🏪 State Mengontrol Pop-up Barcode QRIS Indonesia
   const [showQrisModal, setShowQrisModal] = useState<boolean>(false);
+  
+  // 🔗 STATE BARU: Menampung URL QRIS Asli yang Dikirim dari Backend Server Lu
+  const [dynamicQrisUrl, setDynamicQrisUrl] = useState<string>("");
+  const [isFetchingQris, setIsFetchingQris] = useState<boolean>(false);
 
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
@@ -45,7 +49,8 @@ function MainApp() {
   const ETH_TO_USD_RATE = 3500;
   const ETH_TO_IDR_RATE = 54000000;
 
-  const qrisImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=WhitelabelGatewaySettlementSimulation";
+  // URL Cadangan jika koneksi backend lokal terputus
+  const fallbackQrisUrl = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=WhitelabelGatewaySettlementSimulation";
 
   useEffect(() => {
     let finalAbi: any = null;
@@ -91,13 +96,11 @@ function MainApp() {
     },
   });
 
-  // 🛡️ STRATEGI UPGRADE: Eksekutor Pelindung Tombol Injected Universal & Dompet Konflik
   const handleConnectWallet = async (connector: any) => {
     const cName = connector.name.toLowerCase();
     const cId = connector.id.toLowerCase();
 
     try {
-      // 🔌 JALUR INTERSEPTOR TOTAL TOMBOL INJECTED & UNIVERSAL
       if (cName.includes("injected") || cId.includes("injected") || cId.includes("browser")) {
         if (typeof window !== "undefined" && (window as any).ethereum) {
           await (window as any).ethereum.request({ method: "eth_requestAccounts" });
@@ -106,7 +109,6 @@ function MainApp() {
         }
       }
 
-      // Jalur Interseptor Khusus Ekstensi Phantom
       if (cName.includes("phantom") || cId.includes("phantom")) {
         if (typeof window !== "undefined" && (window as any).phantom?.ethereum) {
           const phantomProvider = (window as any).phantom.ethereum;
@@ -116,7 +118,6 @@ function MainApp() {
         }
       }
 
-      // Jalur Deteksi Array Multi-Provider (Jika banyak wallet terinstal berdampingan)
       if (typeof window !== "undefined" && (window as any).ethereum?.providers?.length) {
         const providers = (window as any).ethereum.providers;
         let matchedProvider = null;
@@ -147,8 +148,9 @@ function MainApp() {
   };
 
   const downloadQris = async () => {
+    const targetUrl = dynamicQrisUrl || fallbackQrisUrl;
     try {
-      const response = await fetch(qrisImageUrl);
+      const response = await fetch(targetUrl);
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       
@@ -161,7 +163,7 @@ function MainApp() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      window.open(qrisImageUrl, "_blank");
+      window.open(targetUrl, "_blank");
     }
   };
 
@@ -216,11 +218,40 @@ function MainApp() {
     }, 1500);
   };
 
-  const handleFiatSimulationSubmit = (e: React.FormEvent) => {
+  // 📡 INTEGRASI TOTAL: Fungsi Pemanggil API Backend TS
+  const handleFiatSimulationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const selectedProductData = WHITELABEL_PRODUCTS.find(p => p.id === Number(fiatProductId));
+    const productPriceEth = selectedProductData ? Number(selectedProductData.defaultPriceEth) : 0.05;
+    const priceInIdr = Math.round(productPriceEth * ETH_TO_IDR_RATE);
+
     if (selectedCurrency === "IDR") {
-      setShowQrisModal(true);
+      setIsFetchingQris(true);
+      try {
+        // Tembak API Backend TS Lu yang sedang jalan di port 5000
+        const response = await fetch("http://localhost:5000/api/charge-qris", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            productId: fiatProductId,
+            amountIdr: priceInIdr
+          })
+        });
+        
+        const data = await response.json();
+        if (data.success && data.qrUrl) {
+          setDynamicQrisUrl(data.qrUrl); // Pasang URL QRIS asli dari Midtrans
+        } else {
+          setDynamicQrisUrl(fallbackQrisUrl);
+        }
+      } catch (err) {
+        console.warn("Backend local offline, using visual fallback bypass...", err);
+        setDynamicQrisUrl(fallbackQrisUrl);
+      } finally {
+        setIsFetchingQris(false);
+        setShowQrisModal(true); // Naikkan pop-up modal ke layar
+      }
       return; 
     }
 
@@ -299,7 +330,8 @@ function MainApp() {
             <p style={{ fontSize: "13px", color: "#495057", margin: "0 0 15px 0" }}>Pindai kode QR di bawah menggunakan GoPay, OVO, Dana, ShopeePay, atau Mobile Banking untuk melunasi lisensi digital B2B.</p>
             
             <div style={{ background: "#f8f9fa", padding: "15px", borderRadius: "10px", display: "inline-block", border: "2px solid #e9ecef" }}>
-              <img src={qrisImageUrl} alt="QRIS Core Engine" width="180" height="180" />
+              {/* Memasang URL Gambar QR dinamis hasil respon API Midtrans */}
+              <img src={dynamicQrisUrl || fallbackQrisUrl} alt="QRIS Core Engine" width="180" height="180" />
             </div>
 
             <div style={{ marginTop: "10px" }}>
@@ -427,12 +459,10 @@ function MainApp() {
                 🎯 <strong>Lokal QRIS Aktif:</strong> Klik tombol simulasi di bawah untuk langsung memunculkan Barcode Pembayaran Nasional Instan.
               </div>
             ) : (
-              /* 💳 INTERFACE UPGRADE: MENGGUNAKAN STABLE CSS GRID UNTUK DISTRIBUSI LAYOUT KARTU KREDIT DI LAYAR HP */
               <div style={{ marginTop: "5px", backgroundColor: "#ffffff", padding: "12px", borderRadius: "8px", border: "1px solid #ffe8cc" }}>
                 <label style={{ display: "block", fontSize: "11px", fontWeight: "bold", marginBottom: "6px", color: "#d9480f" }}>💳 MoonPay / Stripe Secured Credit Card Inputs:</label>
                 <input type="text" placeholder="Card Number (4111 2222 3333 4444)" style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", marginBottom: "8px", boxSizing: "border-box" }} required />
                 
-                {/* 🔒 KUNCI UTAMA: Menggunakan CSS Grid 1fr 1fr agar membagi 50% rata simetris tanpa meleset di HP! */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "4px" }}>
                   <input type="text" placeholder="MM / YY" style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", boxSizing: "border-box" }} required />
                   <input type="password" placeholder="CVC / CVV" maxLength={3} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", boxSizing: "border-box" }} required />
@@ -452,10 +482,12 @@ function MainApp() {
               <span style={{ fontSize: "11px", color: "#868e96", marginLeft: "5px" }}>({selectedProductData?.defaultPriceEth} ETH Equiv)</span>
             </div>
 
-            <button type="submit" disabled={fiatPaymentStatus === "PROCESSING"} style={{ width: "100%", background: "#e67e22", color: "white", border: "none", padding: "11px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
-              {fiatPaymentStatus === "PROCESSING" 
-                ? `Authorizing Secure ${selectedCurrency} Gateway Flow...` 
-                : `Simulate Successful Checkout via ${selectedCurrency}`}
+            <button type="submit" disabled={fiatPaymentStatus === "PROCESSING" || isFetchingQris} style={{ width: "100%", background: "#e67e22", color: "white", border: "none", padding: "11px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
+              {isFetchingQris 
+                ? "Membuka Gerbang API Midtrans..." 
+                : fiatPaymentStatus === "PROCESSING"
+                  ? `Authorizing Secure ${selectedCurrency} Gateway Flow...` 
+                  : `Simulate Successful Checkout via ${selectedCurrency}`}
             </button>
           </form>
         </div>
