@@ -91,11 +91,22 @@ function MainApp() {
     },
   });
 
+  // 🛡️ STRATEGI UPGRADE: Eksekutor Pelindung Tombol Injected Universal & Dompet Konflik
   const handleConnectWallet = async (connector: any) => {
     const cName = connector.name.toLowerCase();
     const cId = connector.id.toLowerCase();
 
     try {
+      // 🔌 JALUR INTERSEPTOR TOTAL TOMBOL INJECTED & UNIVERSAL
+      if (cName.includes("injected") || cId.includes("injected") || cId.includes("browser")) {
+        if (typeof window !== "undefined" && (window as any).ethereum) {
+          await (window as any).ethereum.request({ method: "eth_requestAccounts" });
+          connect({ connector });
+          return;
+        }
+      }
+
+      // Jalur Interseptor Khusus Ekstensi Phantom
       if (cName.includes("phantom") || cId.includes("phantom")) {
         if (typeof window !== "undefined" && (window as any).phantom?.ethereum) {
           const phantomProvider = (window as any).phantom.ethereum;
@@ -105,6 +116,7 @@ function MainApp() {
         }
       }
 
+      // Jalur Deteksi Array Multi-Provider (Jika banyak wallet terinstal berdampingan)
       if (typeof window !== "undefined" && (window as any).ethereum?.providers?.length) {
         const providers = (window as any).ethereum.providers;
         let matchedProvider = null;
@@ -122,13 +134,13 @@ function MainApp() {
 
       connect({ connector });
     } catch (err) {
-      console.warn("Wagmi connect conflict intercepted, triggering direct window fallback...", err);
+      console.warn("Wagmi connection split triggered...", err);
       if (typeof window !== "undefined" && (window as any).ethereum) {
         try {
           await (window as any).ethereum.request({ method: "eth_requestAccounts" });
           connect({ connector });
         } catch (fallbackErr) {
-          alert("Gagal memanggil dompet eksternal. Pastikan ekstensi Anda sudah terbuka dan tidak terkunci!");
+          alert("Gagal memanggil dompet eksternal. Silakan buka dari dApp Browser internal dompet HP Anda!");
         }
       }
     }
@@ -180,7 +192,6 @@ function MainApp() {
   };
 
   const executeOnChainRelayMint = () => {
-    // 💡 BACKGROUND AUTO-DETECT: Cari dompet aktif, jika tidak ada pakai dummy aman
     let targetDeliveryAddress = address ? address : "0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5";
 
     if (!parsedAbi || !currentContractAddress) {
@@ -213,7 +224,6 @@ function MainApp() {
       return; 
     }
 
-    // Jalur CC USD langsung tembak proses eksekusi simulasi tanpa interupsi
     executeOnChainRelayMint();
   };
 
@@ -412,19 +422,20 @@ function MainApp() {
               </div>
             </div>
 
-            {/* 🔄 FORM DYNAMIC TOGGLE SWITCH: SUDAH BERSIH TOTAL DARI SEGALA MASALAH INPUT WALLET */}
             {selectedCurrency === "IDR" ? (
               <div style={{ marginTop: "5px", padding: "10px", backgroundColor: "#ffffff", borderRadius: "8px", border: "1px solid #ffe8cc", fontSize: "12px", color: "#495057" }}>
                 🎯 <strong>Lokal QRIS Aktif:</strong> Klik tombol simulasi di bawah untuk langsung memunculkan Barcode Pembayaran Nasional Instan.
               </div>
             ) : (
-              /* 💳 INTERFACE UTAH: FORM KARTU KREDIT PREMIUM MURNI TANPA ADANYA WALLET TEXT INPUT */
+              /* 💳 INTERFACE UPGRADE: MENGGUNAKAN STABLE CSS GRID UNTUK DISTRIBUSI LAYOUT KARTU KREDIT DI LAYAR HP */
               <div style={{ marginTop: "5px", backgroundColor: "#ffffff", padding: "12px", borderRadius: "8px", border: "1px solid #ffe8cc" }}>
                 <label style={{ display: "block", fontSize: "11px", fontWeight: "bold", marginBottom: "6px", color: "#d9480f" }}>💳 MoonPay / Stripe Secured Credit Card Inputs:</label>
                 <input type="text" placeholder="Card Number (4111 2222 3333 4444)" style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", marginBottom: "8px", boxSizing: "border-box" }} required />
-                <div style={{ display: "flex", gap: "8px", marginBottom: "4px" }}>
-                  <input type="text" placeholder="MM / YY" style={{ flex: "1", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", boxSizing: "border-box" }} required />
-                  <input type="password" placeholder="CVC / CVV" maxLength={3} style={{ flex: "1", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", boxSizing: "border-box" }} required />
+                
+                {/* 🔒 KUNCI UTAMA: Menggunakan CSS Grid 1fr 1fr agar membagi 50% rata simetris tanpa meleset di HP! */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "4px" }}>
+                  <input type="text" placeholder="MM / YY" style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", boxSizing: "border-box" }} required />
+                  <input type="password" placeholder="CVC / CVV" maxLength={3} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", boxSizing: "border-box" }} required />
                 </div>
               </div>
             )}
