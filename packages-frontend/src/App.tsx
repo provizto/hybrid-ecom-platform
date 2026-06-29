@@ -218,7 +218,7 @@ function MainApp() {
     }, 1500);
   };
 
-  // 📡 INTEGRASI DETEKTOR UTAMA JALUR BACKEND LOCALHOST PORT 5000
+  // 📡 INTEGRASI TOTAL JALUR VERCEL SERVERLESS FUNCTION API
   const handleFiatSimulationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -229,8 +229,8 @@ function MainApp() {
     if (selectedCurrency === "IDR") {
       setIsFetchingQris(true);
       try {
-        // 🚀 Ditembak langsung ke gerbang backend lokal laptop lu
-        const response = await fetch("http://localhost:5000/api/charge-qris", {
+        // 🔥 Menggunakan URL Relatif agar otomatis menembak serverless route Vercel
+        const response = await fetch("/api/charge-qris", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -246,14 +246,14 @@ function MainApp() {
           console.log("🎯 Sukses! QRIS Midtrans Berhasil Masuk:", data.qrUrl);
         } else {
           setDynamicQrisUrl(fallbackQrisUrl);
-          // Detektor jika server lu hidup tapi ditolak Midtrans (Server Key Bermasalah)
-          alert("❌ Backend merespon tapi Midtrans menolak!\nPesan: " + JSON.stringify(data));
+          // Detektor jika rute serverless hidup tapi ditolak Midtrans (Server Key/Env Vercel bermasalah)
+          alert("❌ Vercel Serverless merespon tapi Midtrans menolak!\nPesan: " + JSON.stringify(data));
         }
       } catch (err: any) {
-        console.warn("Koneksi tersumbat sebelum sampai backend...", err);
+        console.warn("Koneksi tersumbat sebelum sampai ke API Vercel...", err);
         setDynamicQrisUrl(fallbackQrisUrl);
-        // Detektor jika port server mati atau browser memblokir jalur data
-        alert("⚠️ KONEKSI BLOCKED/GAGAL!\nFrontend gagal mengetuk Backend Port 5000.\nDetail: " + err.message);
+        // Detektor kegagalan jaringan atau deployment crash
+        alert("⚠️ KONEKSI VERCEL API GAGAL!\nFrontend gagal memanggil serverless route /api/charge-qris.\nDetail: " + err.message);
       } finally {
         setIsFetchingQris(false);
         setShowQrisModal(true); 
