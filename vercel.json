@@ -17,8 +17,12 @@
       "dest": "packages-backend/server.ts"
     },
     {
+      "src": "/(.*?)\\.(js|css|png|jpg|jpeg|svg|ico|json|woff|woff2)",
+      "dest": "packages-frontend/$1.$2"
+    },
+    {
       "src": "/(.*)",
-      "dest": "packages-frontend/$1"
+      "dest": "packages-frontend/index.html"
     }
   ]
 }
