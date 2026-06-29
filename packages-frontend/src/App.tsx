@@ -33,7 +33,7 @@ function MainApp() {
   const [dbLogs, setDbLogs] = useState<DbLog[]>([]);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState<boolean>(false);
   
-  // 🏪 State Baru: Mengontrol Pop-up Barcode QRIS Indonesia
+  // 🏪 State Mengontrol Pop-up Barcode QRIS Indonesia
   const [showQrisModal, setShowQrisModal] = useState<boolean>(false);
 
   const { address, isConnected } = useAccount();
@@ -120,7 +120,8 @@ function MainApp() {
     });
   };
 
-  const handleDirectBuy = (id: any, priceEth: any) => {
+  // 💡 Menggunakan prefiks _ pada _priceEth agar lolos sensor kompilasi tsc Vercel
+  const handleDirectBuy = (id: any, _priceEth: any) => {
     if (!isConnected || !address) {
       setIsWalletModalOpen(true);
       connectManualInjected();
@@ -136,26 +137,7 @@ function MainApp() {
     });
   };
 
-  // 💳 EKSEKUSI PEMBAYARAN FIAT HYBRID (VERSI FIX POP-UP INSTAN TANPA BLOKIR VALIDASI FORM)
-  const handleFiatSimulationSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // 1. Jika memilih Rupiah (IDR), langsung hantam tampilkan pop-up QRIS tanpa syarat pengisian alamat dulu!
-    if (selectedCurrency === "IDR") {
-      setShowQrisModal(true);
-      return; 
-    }
-
-    // 2. Jalur Standard USD Credit Card (Tetap butuh validasi alamat wallet di awal)
-    if (!parsedAbi || !currentContractAddress || !fiatBuyerAddress) {
-      alert("Please fill in the Target Client Wallet Destination Address first!");
-      return;
-    }
-    executeOnChainRelayMint();
-  };
-
   const executeOnChainRelayMint = () => {
-    // Cek validasi alamat dompet tujuan saat tombol konfirmasi QRIS diklik
     if (!parsedAbi || !currentContractAddress || !fiatBuyerAddress) {
       alert("Peringatan: Tolong isi 'Target Client Wallet Destination Address' terlebih dahulu di form utama sebelum mengonfirmasi pembayaran QRIS!");
       setShowQrisModal(false); 
@@ -176,6 +158,21 @@ function MainApp() {
         args: [fiatBuyerAddress as `0x${string}`, dummyAwsTokenUri, BigInt(fiatProductId)],
       });
     }, 1500);
+  };
+
+  const handleFiatSimulationSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (selectedCurrency === "IDR") {
+      setShowQrisModal(true);
+      return; 
+    }
+
+    if (!parsedAbi || !currentContractAddress || !fiatBuyerAddress) {
+      alert("Please fill in the Target Client Wallet Destination Address first!");
+      return;
+    }
+    executeOnChainRelayMint();
   };
 
   const selectedProductData = WHITELABEL_PRODUCTS.find(p => p.id === Number(fiatProductId));
@@ -233,7 +230,6 @@ function MainApp() {
             
             <p style={{ fontSize: "13px", color: "#495057", margin: "0 0 15px 0" }}>Pindai kode QR di bawah menggunakan GoPay, OVO, Dana, ShopeePay, atau Mobile Banking untuk melunasi lisensi digital B2B.</p>
             
-            {/* Simulasi Gambar Kotak QRIS Asli */}
             <div style={{ background: "#f8f9fa", padding: "15px", borderRadius: "10px", display: "inline-block", border: "2px solid #e9ecef" }}>
               <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=WhitelabelGatewaySettlementSimulation" alt="QRIS Core Engine" width="180" height="180" />
             </div>
