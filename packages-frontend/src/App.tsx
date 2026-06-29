@@ -92,6 +92,54 @@ function MainApp() {
     },
   });
 
+  // 🛡️ STRATEGI BARU: Eksekutor Koneksi Dompet Anti-Bentrok & Terisolasi 
+  const handleConnectWallet = async (connector: any) => {
+    const cName = connector.name.toLowerCase();
+    const cId = connector.id.toLowerCase();
+
+    try {
+      // Jalur Interseptor Khusus Ekstensi Phantom (Bypass dominasi MetaMask)
+      if (cName.includes("phantom") || cId.includes("phantom")) {
+        if (typeof window !== "undefined" && (window as any).phantom?.ethereum) {
+          const phantomProvider = (window as any).phantom.ethereum;
+          await phantomProvider.request({ method: "eth_requestAccounts" });
+          connect({ connector });
+          return;
+        }
+      }
+
+      // Jalur Deteksi Array Multi-Provider (Jika banyak wallet terinstal berdampingan)
+      if (typeof window !== "undefined" && (window as any).ethereum?.providers?.length) {
+        const providers = (window as any).ethereum.providers;
+        let matchedProvider = null;
+
+        if (cName.includes("phantom")) matchedProvider = providers.find((p: any) => p.isPhantom);
+        else if (cName.includes("metamask")) matchedProvider = providers.find((p: any) => p.isMetaMask);
+        else if (cName.includes("backpack")) matchedProvider = providers.find((p: any) => p.isBackpack);
+
+        if (matchedProvider) {
+          await matchedProvider.request({ method: "eth_requestAccounts" });
+          connect({ connector });
+          return;
+        }
+      }
+
+      // Standar Eksekusi Wagmi Native Connection
+      connect({ connector });
+    } catch (err) {
+      console.warn("Wagmi connect conflict intercepted, triggering direct window fallback...", err);
+      // Fallback Darurat Tingkat Rendah untuk Tombol Injected Universal
+      if (typeof window !== "undefined" && (window as any).ethereum) {
+        try {
+          await (window as any).ethereum.request({ method: "eth_requestAccounts" });
+          connect({ connector });
+        } catch (fallbackErr) {
+          alert("Gagal memanggil dompet eksternal. Pastikan ekstensi Anda sudah terbuka dan tidak terkunci!");
+        }
+      }
+    }
+  };
+
   // 📥 Fungsi Pengunduh Barcode QRIS Finansial
   const downloadQris = async () => {
     try {
@@ -108,7 +156,6 @@ function MainApp() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      // Fallback jika browser mobile menghadang operasi fetch blob lintas domain (CORS)
       window.open(qrisImageUrl, "_blank");
     }
   };
@@ -213,11 +260,11 @@ function MainApp() {
             </div>
           ) : (
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {/* 🚀 RESPONSIVE MULTI-WALLET CONNECTOR GRID */}
+              {/* 🚀 AKSI KLIK BARU MENGGUNAKAN SEPARATOR ANTI BENTROK */}
               {connectors.map((connector) => (
                 <button 
                   key={connector.uid} 
-                  onClick={() => connect({ connector })} 
+                  onClick={() => handleConnectWallet(connector)} 
                   style={{ 
                     background: "#0070f3", 
                     color: "white", 
@@ -253,7 +300,6 @@ function MainApp() {
               <img src={qrisImageUrl} alt="QRIS Core Engine" width="180" height="180" />
             </div>
 
-            {/* 💾 TOMBOL DOWNLOAD BARCODE BARU */}
             <div style={{ marginTop: "10px" }}>
               <button 
                 type="button" 
