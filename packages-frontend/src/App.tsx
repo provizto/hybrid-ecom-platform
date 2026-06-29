@@ -90,21 +90,24 @@ function MainApp() {
     },
   });
 
-  // Fungsi koneksi cerdas pendeteksi MetaMask, Backpack, Phantom, & Injected
+  // Fungsi koneksi cerdas tingkat rendah penembak langsung objek window.ethereum
   const connectManualInjected = async () => {
     if (typeof window !== "undefined" && (window as any).ethereum) {
       try {
         await (window as any).ethereum.request({ method: "eth_requestAccounts" });
         window.location.reload();
       } catch (error) {
-        console.error("User rejected mobile wallet connection", error);
+        console.error("User rejected wallet connection", error);
       }
     } else {
+      // Fallback menggunakan connector standar wagmi jika tersedia
       const injectedConnector = connectors.find((c) => c.id === "injected" || c.id === "io.metamask.wrapper");
       if (injectedConnector) {
         connect({ connector: injectedConnector });
       } else if (connectors.length > 0) {
         connect({ connector: connectors[0] });
+      } else {
+        alert("Tidak ada dompet terdeteksi. Silakan gunakan Kiwi Browser dengan ekstensi (MetaMask/Backpack/Phantom) atau buka via dApp Browser internal dompet HP Anda!");
       }
     }
   };
@@ -120,7 +123,6 @@ function MainApp() {
     });
   };
 
-  // 💡 Menggunakan prefiks _ pada _priceEth agar lolos sensor kompilasi tsc Vercel
   const handleDirectBuy = (id: any, _priceEth: any) => {
     if (!isConnected || !address) {
       setIsWalletModalOpen(true);
@@ -138,7 +140,8 @@ function MainApp() {
   };
 
   const executeOnChainRelayMint = () => {
-    if (!parsedAbi || !currentContractAddress || !fiatBuyerAddress) {
+    // Validasi alamat dompet tujuan dipindahkan ke sini agar tidak memblokir kemunculan QRIS di awal
+    if (!parsedAbi || !currentContractAddress || !fiatBuyerAddress || fiatBuyerAddress.trim() === "") {
       alert("Peringatan: Tolong isi 'Target Client Wallet Destination Address' terlebih dahulu di form utama sebelum mengonfirmasi pembayaran QRIS!");
       setShowQrisModal(false); 
       return;
@@ -163,12 +166,14 @@ function MainApp() {
   const handleFiatSimulationSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Jika memilih Rupiah (IDR), langsung hantam tampilkan pop-up QRIS tanpa syarat!
     if (selectedCurrency === "IDR") {
       setShowQrisModal(true);
       return; 
     }
 
-    if (!parsedAbi || !currentContractAddress || !fiatBuyerAddress) {
+    // Jalur Standard USD Credit Card (Tetap butuh validasi alamat wallet di awal)
+    if (!parsedAbi || !currentContractAddress || !fiatBuyerAddress || fiatBuyerAddress.trim() === "") {
       alert("Please fill in the Target Client Wallet Destination Address first!");
       return;
     }
@@ -212,7 +217,7 @@ function MainApp() {
           ) : (
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               <button onClick={connectManualInjected} style={{ background: "#0070f3", color: "white", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
-                Connect Extension (MetaMask/Backpack/Phantom)
+                Connect Wallet (MetaMask / Backpack / Phantom)
               </button>
             </div>
           )}
@@ -230,6 +235,7 @@ function MainApp() {
             
             <p style={{ fontSize: "13px", color: "#495057", margin: "0 0 15px 0" }}>Pindai kode QR di bawah menggunakan GoPay, OVO, Dana, ShopeePay, atau Mobile Banking untuk melunasi lisensi digital B2B.</p>
             
+            {/* Simulasi Gambar Kotak QRIS Asli */}
             <div style={{ background: "#f8f9fa", padding: "15px", borderRadius: "10px", display: "inline-block", border: "2px solid #e9ecef" }}>
               <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=WhitelabelGatewaySettlementSimulation" alt="QRIS Core Engine" width="180" height="180" />
             </div>
