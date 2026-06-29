@@ -25,7 +25,6 @@ function MainApp() {
   const [adminPrice, setAdminPrice] = useState<string>("0.05");
 
   // State untuk Rig Pembayaran Fiat Global
-  const [fiatBuyerAddress, setFiatBuyerAddress] = useState<string>("");
   const [fiatProductId, setFiatProductId] = useState<string>("3");
   const [fiatPaymentStatus, setFiatPaymentStatus] = useState<string>("IDLE");
   const [selectedCurrency, setSelectedCurrency] = useState<string>("USD"); 
@@ -181,19 +180,11 @@ function MainApp() {
   };
 
   const executeOnChainRelayMint = () => {
-    // Taktik Fallback Pintar: Isi otomatis alamat dompet agar tidak merusak eksekusi relay mint on-chain
-    let targetDeliveryAddress = fiatBuyerAddress ? fiatBuyerAddress.trim() : "";
-    if (targetDeliveryAddress === "") {
-      if (address) {
-        targetDeliveryAddress = address;
-      } else {
-        // Alamat dummy valid pemegang aset cadangan jika user benar-benar tidak konek apa pun
-        targetDeliveryAddress = "0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5";
-      }
-    }
+    // 💡 BACKGROUND AUTO-DETECT: Cari dompet aktif, jika tidak ada pakai dummy aman
+    let targetDeliveryAddress = address ? address : "0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5";
 
-    if (!parsedAbi || !currentContractAddress || !targetDeliveryAddress.startsWith("0x")) {
-      alert("Peringatan: Harap isi alamat wallet tujuan pengiriman aset digital yang valid (0x...)!");
+    if (!parsedAbi || !currentContractAddress) {
+      alert("Peringatan: Konfigurasi ABI kontrak pintar belum siap dimuat di latar belakang!");
       setShowQrisModal(false); 
       return;
     }
@@ -222,7 +213,7 @@ function MainApp() {
       return; 
     }
 
-    // Jalur CC USD otomatis langsung tembak eksekusi simulasi tanpa interupsi form wallet luar
+    // Jalur CC USD langsung tembak proses eksekusi simulasi tanpa interupsi
     executeOnChainRelayMint();
   };
 
@@ -421,22 +412,20 @@ function MainApp() {
               </div>
             </div>
 
-            {/* 🔄 FORM DYNAMIC TOGGLE SWITCH BERDASARKAN MATA UANG YANG DIPILIH */}
+            {/* 🔄 FORM DYNAMIC TOGGLE SWITCH: SUDAH BERSIH TOTAL DARI SEGALA MASALAH INPUT WALLET */}
             {selectedCurrency === "IDR" ? (
-              <div style={{ marginTop: "5px" }}>
-                <label style={{ display: "block", fontSize: "11px", fontWeight: "bold", marginBottom: "3px" }}>2. Target Client Wallet Destination Address:</label>
-                <input type="text" value={fiatBuyerAddress} onChange={(e) => setFiatBuyerAddress(e.target.value)} placeholder="0x... (Alamat wallet penerima lisensi NFT)" style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", boxSizing: "border-box" }} />
+              <div style={{ marginTop: "5px", padding: "10px", backgroundColor: "#ffffff", borderRadius: "8px", border: "1px solid #ffe8cc", fontSize: "12px", color: "#495057" }}>
+                🎯 <strong>Lokal QRIS Aktif:</strong> Klik tombol simulasi di bawah untuk langsung memunculkan Barcode Pembayaran Nasional Instan.
               </div>
             ) : (
-              /* 💳 INTERFACE BARU: MOONPAY / STRIPE CREDIT CARD FORM FOR USD SELECTION */
+              /* 💳 INTERFACE UTAH: FORM KARTU KREDIT PREMIUM MURNI TANPA ADANYA WALLET TEXT INPUT */
               <div style={{ marginTop: "5px", backgroundColor: "#ffffff", padding: "12px", borderRadius: "8px", border: "1px solid #ffe8cc" }}>
                 <label style={{ display: "block", fontSize: "11px", fontWeight: "bold", marginBottom: "6px", color: "#d9480f" }}>💳 MoonPay / Stripe Secured Credit Card Inputs:</label>
-                <input type="text" placeholder="Card Number (4111 2222 3333 4444)" style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", marginBottom: "8px", boxSizing: "border-box" }} />
-                <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
-                  <input type="text" placeholder="MM / YY" style={{ flex: "1", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", boxSizing: "border-box" }} />
-                  <input type="password" placeholder="CVC / CVV" maxLength={3} style={{ flex: "1", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", boxSizing: "border-box" }} />
+                <input type="text" placeholder="Card Number (4111 2222 3333 4444)" style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", marginBottom: "8px", boxSizing: "border-box" }} required />
+                <div style={{ display: "flex", gap: "8px", marginBottom: "4px" }}>
+                  <input type="text" placeholder="MM / YY" style={{ flex: "1", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", boxSizing: "border-box" }} required />
+                  <input type="password" placeholder="CVC / CVV" maxLength={3} style={{ flex: "1", padding: "8px", borderRadius: "6px", border: "1px solid #ccc", fontSize: "12px", boxSizing: "border-box" }} required />
                 </div>
-                <input type="text" value={fiatBuyerAddress} onChange={(e) => setFiatBuyerAddress(e.target.value)} placeholder="Delivery Wallet Address (0x... Opsional / Auto-Detect)" style={{ width: "100%", padding: "7px", borderRadius: "6px", border: "1px solid #e0e0e0", fontSize: "11px", backgroundColor: "#f8f9fa", boxSizing: "border-box" }} />
               </div>
             )}
 
