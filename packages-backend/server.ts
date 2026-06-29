@@ -20,6 +20,14 @@ const coreApi = new (midtransClient as any).CoreApi({
     clientKey: process.env.MIDTRANS_CLIENT_KEY || ""
 });
 
+// 🔍 RUTE TES JALUR (Biar bisa dibuka langsung di browser URL)
+app.get("/api/charge-qris", (req: Request, res: Response) => {
+    res.json({ 
+        success: true, 
+        message: "🔥 Gerbang API Serverless ZoniqFi Mendarat Mulus! Mesin siaga menerima data POST checkout Midtrans." 
+    });
+});
+
 // 📥 API JALUR 1: Memicu Pembuatan QRIS Asli dari Midtrans
 app.post("/api/charge-qris", async (req: Request, res: Response): Promise<void> => {
     const { productId, amountIdr } = req.body;
