@@ -218,7 +218,7 @@ function MainApp() {
     }, 1500);
   };
 
-  // 📡 INTEGRASI TOTAL: Fungsi Pemanggil API Backend TS
+  // 📡 INTEGRASI TOTAL JALUR VERCEL API & ZONIQFI ONE-ROUTING
   const handleFiatSimulationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -229,8 +229,8 @@ function MainApp() {
     if (selectedCurrency === "IDR") {
       setIsFetchingQris(true);
       try {
-        // Tembak API Backend TS Lu yang sedang jalan di port 5000
-        const response = await fetch("http://localhost:5000/api/charge-qris", {
+        // 🔥 Menggunakan URL Relatif agar otomatis menembak serverless route zoniqfi.com/api/charge-qris
+        const response = await fetch("/api/charge-qris", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -241,16 +241,16 @@ function MainApp() {
         
         const data = await response.json();
         if (data.success && data.qrUrl) {
-          setDynamicQrisUrl(data.qrUrl); // Pasang URL QRIS asli dari Midtrans
+          setDynamicQrisUrl(data.qrUrl); 
         } else {
           setDynamicQrisUrl(fallbackQrisUrl);
         }
       } catch (err) {
-        console.warn("Backend local offline, using visual fallback bypass...", err);
+        console.warn("API Serverless routing bypass option triggered...", err);
         setDynamicQrisUrl(fallbackQrisUrl);
       } finally {
         setIsFetchingQris(false);
-        setShowQrisModal(true); // Naikkan pop-up modal ke layar
+        setShowQrisModal(true); 
       }
       return; 
     }
@@ -327,10 +327,9 @@ function MainApp() {
               <button type="button" onClick={() => setShowQrisModal(false)} style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "#888" }}>✕</button>
             </div>
             
-            <p style={{ fontSize: "13px", color: "#495057", margin: "0 0 15px 0" }}>Pindai kode QR di bawah menggunakan GoPay, OVO, Dana, ShopeePay, atau Mobile Banking untuk melunasi lisensi digital B2B.</p>
+            <p style={{ fontSize: "13px", color: "#495057", margin: "0 0 15px 0" }}>Pindai kode QR di bawah menggunakan GoPay, OVO, Dana, ShopeePay, or Mobile Banking untuk melunasi lisensi digital B2B.</p>
             
             <div style={{ background: "#f8f9fa", padding: "15px", borderRadius: "10px", display: "inline-block", border: "2px solid #e9ecef" }}>
-              {/* Memasang URL Gambar QR dinamis hasil respon API Midtrans */}
               <img src={dynamicQrisUrl || fallbackQrisUrl} alt="QRIS Core Engine" width="180" height="180" />
             </div>
 

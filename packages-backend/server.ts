@@ -71,5 +71,12 @@ app.post("/api/midtrans-webhook", async (req: Request, res: Response): Promise<v
     res.status(200).send("OK");
 });
 
-const PORT = 5000;
-app.listen(PORT, () => console.log(`🚀 Server Backend TS mengudara mulus di port ${PORT}`));
+// Amandemen bagian bawah server.ts agar mendukung Vercel Cloud Serverless
+const PORT = process.env.PORT || 5000;
+
+if (process.env.NODE_ENV !== "production") {
+    app.listen(PORT, () => console.log(`🚀 Server Lokal TS mengudara di port ${PORT}`));
+}
+
+// WAJIB: Export app agar mesin Vercel Serverless bisa mengeksekusi handler-nya
+export default app;
