@@ -46,6 +46,8 @@ function MainApp() {
   const ETH_TO_USD_RATE = 3500;
   const ETH_TO_IDR_RATE = 54000000;
 
+  const qrisImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=WhitelabelGatewaySettlementSimulation";
+
   useEffect(() => {
     let finalAbi: any = null;
     if (kontrakData && (kontrakData as any).abi) {
@@ -90,25 +92,24 @@ function MainApp() {
     },
   });
 
-  // Fungsi koneksi cerdas tingkat rendah penembak langsung objek window.ethereum
-  const connectManualInjected = async () => {
-    if (typeof window !== "undefined" && (window as any).ethereum) {
-      try {
-        await (window as any).ethereum.request({ method: "eth_requestAccounts" });
-        window.location.reload();
-      } catch (error) {
-        console.error("User rejected wallet connection", error);
-      }
-    } else {
-      // Fallback menggunakan connector standar wagmi jika tersedia
-      const injectedConnector = connectors.find((c) => c.id === "injected" || c.id === "io.metamask.wrapper");
-      if (injectedConnector) {
-        connect({ connector: injectedConnector });
-      } else if (connectors.length > 0) {
-        connect({ connector: connectors[0] });
-      } else {
-        alert("Tidak ada dompet terdeteksi. Silakan gunakan Kiwi Browser dengan ekstensi (MetaMask/Backpack/Phantom) atau buka via dApp Browser internal dompet HP Anda!");
-      }
+  // 📥 Fungsi Pengunduh Barcode QRIS Finansial
+  const downloadQris = async () => {
+    try {
+      const response = await fetch(qrisImageUrl);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `QRIS-Whitelabel-Gateway-SKU0${fiatProductId}.png`;
+      document.body.appendChild(link);
+      link.click();
+      
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      // Fallback jika browser mobile menghadang operasi fetch blob lintas domain (CORS)
+      window.open(qrisImageUrl, "_blank");
     }
   };
 
@@ -126,7 +127,6 @@ function MainApp() {
   const handleDirectBuy = (id: any, _priceEth: any) => {
     if (!isConnected || !address) {
       setIsWalletModalOpen(true);
-      connectManualInjected();
       return;
     }
     if (!parsedAbi || !currentContractAddress) return;
@@ -140,7 +140,6 @@ function MainApp() {
   };
 
   const executeOnChainRelayMint = () => {
-    // Validasi alamat dompet tujuan dipindahkan ke sini agar tidak memblokir kemunculan QRIS di awal
     if (!parsedAbi || !currentContractAddress || !fiatBuyerAddress || fiatBuyerAddress.trim() === "") {
       alert("Peringatan: Tolong isi 'Target Client Wallet Destination Address' terlebih dahulu di form utama sebelum mengonfirmasi pembayaran QRIS!");
       setShowQrisModal(false); 
@@ -166,13 +165,11 @@ function MainApp() {
   const handleFiatSimulationSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Jika memilih Rupiah (IDR), langsung hantam tampilkan pop-up QRIS tanpa syarat!
     if (selectedCurrency === "IDR") {
       setShowQrisModal(true);
       return; 
     }
 
-    // Jalur Standard USD Credit Card (Tetap butuh validasi alamat wallet di awal)
     if (!parsedAbi || !currentContractAddress || !fiatBuyerAddress || fiatBuyerAddress.trim() === "") {
       alert("Please fill in the Target Client Wallet Destination Address first!");
       return;
@@ -200,7 +197,7 @@ function MainApp() {
     }}>
       
       {/* NAVBAR HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #e1e8ed", paddingBottom: "20px", marginBottom: "30px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #e1e8ed", paddingBottom: "20px", marginBottom: "30px", flexWrap: "wrap", gap: "15px" }}>
         <div>
           <h1 style={{ margin: 0, fontSize: "24px", color: "#0f1419" }}>🏪 {storeName ? String(storeName) : "Web3 Digital Core"}</h1>
           <p style={{ margin: "5px 0 0 0", fontSize: "13px", color: "#657786" }}>Enterprise Hybrid B2B Whitelabel Gateway</p>
@@ -216,9 +213,26 @@ function MainApp() {
             </div>
           ) : (
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              <button onClick={connectManualInjected} style={{ background: "#0070f3", color: "white", border: "none", padding: "8px 14px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>
-                Connect Wallet (MetaMask / Backpack / Phantom)
-              </button>
+              {/* 🚀 RESPONSIVE MULTI-WALLET CONNECTOR GRID */}
+              {connectors.map((connector) => (
+                <button 
+                  key={connector.uid} 
+                  onClick={() => connect({ connector })} 
+                  style={{ 
+                    background: "#0070f3", 
+                    color: "white", 
+                    border: "none", 
+                    padding: "10px 16px", 
+                    borderRadius: "8px", 
+                    cursor: "pointer", 
+                    fontWeight: "bold", 
+                    fontSize: "13px",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                  }}
+                >
+                  Connect {connector.name}
+                </button>
+              ))}
             </div>
           )}
         </div>
@@ -235,9 +249,31 @@ function MainApp() {
             
             <p style={{ fontSize: "13px", color: "#495057", margin: "0 0 15px 0" }}>Pindai kode QR di bawah menggunakan GoPay, OVO, Dana, ShopeePay, atau Mobile Banking untuk melunasi lisensi digital B2B.</p>
             
-            {/* Simulasi Gambar Kotak QRIS Asli */}
             <div style={{ background: "#f8f9fa", padding: "15px", borderRadius: "10px", display: "inline-block", border: "2px solid #e9ecef" }}>
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=WhitelabelGatewaySettlementSimulation" alt="QRIS Core Engine" width="180" height="180" />
+              <img src={qrisImageUrl} alt="QRIS Core Engine" width="180" height="180" />
+            </div>
+
+            {/* 💾 TOMBOL DOWNLOAD BARCODE BARU */}
+            <div style={{ marginTop: "10px" }}>
+              <button 
+                type="button" 
+                onClick={downloadQris} 
+                style={{ 
+                  background: "#3b82f6", 
+                  color: "#ffffff", 
+                  border: "none", 
+                  padding: "6px 14px", 
+                  borderRadius: "6px", 
+                  cursor: "pointer", 
+                  fontWeight: "bold", 
+                  fontSize: "12px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px"
+                }}
+              >
+                💾 Unduh Kode QRIS
+              </button>
             </div>
 
             <div style={{ background: "#fff3cd", color: "#856404", padding: "10px", borderRadius: "8px", fontSize: "13px", fontWeight: "bold", margin: "15px 0" }}>
@@ -251,10 +287,10 @@ function MainApp() {
         </div>
       )}
 
-      {/* DUMMY HIDDEN ALERT FOR TS SATISFACTION */}
+      {/* BANNER PERINGATAN KONEKSI DOMPET MOBIL */}
       {isWalletModalOpen && !isConnected && (
-        <div style={{ background: "#fff3cd", padding: "10px", borderRadius: "6px", marginBottom: "15px", fontSize: "12px", color: "#856404" }}>
-          ⚠️ Action triggered. Invoking mobile browser cryptographic connection...
+        <div style={{ background: "#fff3cd", padding: "12px", borderRadius: "8px", marginBottom: "20px", fontSize: "13px", color: "#856404", border: "1px solid #ffeeba" }}>
+          💡 <strong>Petunjuk Koneksi:</strong> Ketuk salah satu tombol dompet di bar navigasi atas. Jika menggunakan HP, pastikan tautan ini dibuka di dalam menu browser internal aplikasi MetaMask/Backpack/Phantom Anda.
         </div>
       )}
 
