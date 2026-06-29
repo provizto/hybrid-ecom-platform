@@ -17,12 +17,11 @@
       "dest": "packages-backend/server.ts"
     },
     {
-      "src": "/(.*?)\\.(js|css|png|jpg|jpeg|svg|ico|json|woff|woff2)",
-      "dest": "packages-frontend/$1.$2"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "packages-frontend/index.html"
+      "dest": "/index.html"
     }
   ]
 }
