@@ -395,7 +395,7 @@ function MainApp() {
   <p style={{ color: "#dc2626", margin: 0, fontSize: "14px", fontWeight: 500 }}>
     ❌ Smart Contract Error: {
       txError.message.includes("Approval Denied") || txError.message.includes("User rejected")
-        ? "Transaksi dibatalkan oleh pengguna (Approval Denied)."
+        ? "Transaction canceled by user (Approval Denied)."
         : txError.message.split("\n")[0] // Kalau eror kode lain, ambil baris pertamanya saja biar pendek
     }
   </p>
