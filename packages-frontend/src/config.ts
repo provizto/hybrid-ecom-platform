@@ -1,14 +1,17 @@
-import { http, createConfig } from 'wagmi'
-import { hardhat } from 'wagmi/chains'
-import { injected } from 'wagmi/connectors'
+import { http, createConfig } from "wagmi";
+import { mainnet, polygon, polygonAmoy } from "wagmi/chains";
+import { injected, metaMask, phantom } from "wagmi/connectors";
 
 export const config = createConfig({
-  chains: [hardhat],
+  chains: [mainnet, polygon, polygonAmoy],
   connectors: [
-    injected(), 
+    injected(), // Fallback untuk dApp browser bawaan dompet
+    metaMask(), // Memunculkan tombol khusus MetaMask (Pemicu Deep Link)
+    phantom(),  // Memunculkan tombol khusus Phantom (Pemicu Deep Link)
   ],
   transports: {
-    // Paksa langsung ke IP IPv4, jangan pakai kata 'localhost' agar tidak di-resolve ke IPv6 oleh Windows
-    [hardhat.id]: http('http://127.0.0.1:8545'), 
+    [mainnet.id]: http(),
+    [polygon.id]: http(),
+    [polygonAmoy.id]: http(),
   },
-})
+});

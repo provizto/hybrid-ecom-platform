@@ -17,7 +17,6 @@ interface DbLog {
   currencyMethod: string;
 }
 
-// 🎨 Peta Tema Warna Kartu SKU yang Aman
 const cardThemes: Record<number, { bg: string; border: string }> = {
   1: { bg: "#eff6ff", border: "#bfdbfe" }, // Soft Ice Blue
   2: { bg: "#f5f3ff", border: "#ddd6fe" }, // Soft Purple
@@ -55,7 +54,6 @@ function MainApp() {
   const ETH_TO_USD_RATE = 3500;
   const ETH_TO_IDR_RATE = 54000000;
 
-  // URL Cadangan jika koneksi backend lokal terputus
   const fallbackQrisUrl = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=WhitelabelGatewaySettlementSimulation";
 
   useEffect(() => {
@@ -118,7 +116,7 @@ function MainApp() {
         }
       }
 
-      // 🔥 JIKA DI HP & BELUM DI dAPP BROWSER -> TENDANG OTOMATIS PAKAI DEEP LINK WALLET!
+      // 🔥 AUTO DEEP-LINK REDIRECT JIKA DIBUKA DI CHROME/SAFARI HP BIASA
       if (isMobile) {
         const cleanUrl = window.location.href.replace(/^https?:\/\//, "");
 
@@ -128,10 +126,6 @@ function MainApp() {
         }
         if (cName.includes("phantom") || cId.includes("phantom")) {
           window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(window.location.href)}`;
-          return;
-        }
-        if (cName.includes("backpack") || cId.includes("backpack")) {
-          window.location.href = `https://backpack.app/ul/browse/${encodeURIComponent(window.location.href)}`;
           return;
         }
       }
@@ -303,7 +297,7 @@ function MainApp() {
         </div>
       </div>
 
-      {/* 📥 DYNAMIC FLOATING OVERLAY MODAL: GERBANG KONEKSI WALLET UTAMA */}
+      {/* 📥 FLOATING OVERLAY MODAL: SEKARANG MEMUNCULKAN SEMUA TOMBOL WALLET SECARA EKSPLISIT */}
       {isWalletModalOpen && !isConnected && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100000 }}>
           <div style={{ backgroundColor: "#ffffff", padding: "35px", borderRadius: "20px", width: "100%", maxWidth: "340px", textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
@@ -314,32 +308,38 @@ function MainApp() {
             <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "22px", lineHeight: 1.4 }}>Pilih salah satu penyedia enkripsi di bawah untuk mengaktifkan tanda tangan kriptografi.</p>
             
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {(connectors || []).map((connector) => (
-                <button 
-                  key={connector.uid} 
-                  onClick={() => {
-                    handleConnectWallet(connector);
-                    setIsWalletModalOpen(false);
-                  }} 
-                  style={{ 
-                    background: "#f9fafb", 
-                    color: "#111827", 
-                    border: "1px solid #e5e7eb", 
-                    padding: "14px", 
-                    borderRadius: "12px", 
-                    cursor: "pointer", 
-                    fontWeight: 700, 
-                    fontSize: "14px",
-                    textAlign: "left",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between"
-                  }}
-                >
-                  <span>🚀 {connector.name || "Wallet"}</span>
-                  <span style={{ fontSize: "11px", color: "#4b5563", background: "#e5e7eb", padding: "2px 6px", borderRadius: "4px" }}>Active</span>
-                </button>
-              ))}
+              {(connectors || []).map((connector) => {
+                // Formatting nama tombol agar terlihat rapi dan ramah di mata pembeli
+                let displayWalletName = connector.name || "Injected Node";
+                if (displayWalletName.toLowerCase() === "injected") displayWalletName = "Browser Default Extension";
+                
+                return (
+                  <button 
+                    key={connector.uid} 
+                    onClick={() => {
+                      handleConnectWallet(connector);
+                      setIsWalletModalOpen(false);
+                    }} 
+                    style={{ 
+                      background: "#f9fafb", 
+                      color: "#111827", 
+                      border: "1px solid #e5e7eb", 
+                      padding: "14px", 
+                      borderRadius: "12px", 
+                      cursor: "pointer", 
+                      fontWeight: 700, 
+                      fontSize: "14px",
+                      textAlign: "left",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between"
+                    }}
+                  >
+                    <span>🚀 {displayWalletName}</span>
+                    <span style={{ fontSize: "11px", color: "#2563eb", background: "#eff6ff", padding: "2px 6px", borderRadius: "4px", fontWeight: 600 }}>Launch</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -388,7 +388,7 @@ function MainApp() {
         </div>
       )}
 
-      {/* 👑 SOLUTIONS MARKETPLACE */}
+      {/* 👑 ELEGAN & COLORFUL SOLUTIONS MARKETPLACE */}
       <div style={{ marginBottom: "50px" }}>
         <h3 style={{ margin: "0 0 6px 0", fontSize: "20px", fontWeight: 700, color: "#111827" }}>🛒 B2B Digital Solutions Catalog</h3>
         <p style={{ margin: "0 0 25px 0", fontSize: "14px", color: "#6b7280" }}>Direct on-chain procurement infrastructure for enterprise infrastructure items.</p>
@@ -429,13 +429,14 @@ function MainApp() {
                     {prod.name}
                   </h4>
 
+                  {/* 🎯 PERBAIKAN DESKRIPSI: Memanggil data dinamis unik dari products.ts */}
                   <p style={{ margin: "0 0 20px 0", fontSize: "13px", color: "#4b5563", lineHeight: 1.5 }}>
-                    Enterprise whitelabel licensing block module complete with decentralized metadata distribution.
+                    {prod.description || "Enterprise whitelabel licensing block module complete with decentralized metadata distribution."}
                   </p>
                 </div>
 
                 <div>
-                  {/* 🛡️ GUARD INTEGRITAS ALAMAT BLOCKCHAIN */}
+                  {/* 🛡️ GUARD INTEGRITAS DATA BLOCKCHAIN */}
                   <div style={{ 
                     background: isConnected ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.06)", 
                     border: `1px solid ${isConnected ? "#a7f3d0" : "#fca5a5"}`, 
@@ -571,7 +572,6 @@ function MainApp() {
 
             <div>
               <label style={{ display: "block", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", marginBottom: "4px", color: "#4b5563" }}>3. Select Solutions Product:</label>
-              {/* 🛡️ PERBAIKAN SELEKTOR HYBRID (ANTI-BLANK DI HP) */}
               <select value={fiatProductId} onChange={(e) => setFiatProductId(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }}>
                 {(WHITELABEL_PRODUCTS || []).map((p: Product) => (
                   <option key={p.id} value={p.id} style={{ backgroundColor: "#ffffff", color: "#111827" }}>{p.name}</option>
@@ -591,16 +591,14 @@ function MainApp() {
 
       </div>
 
-      {/* 🛠️ INTERNAL MANAGEMENT CONTROL */}
+      {/* INTERNAL MANAGEMENT CONTROL */}
       <div style={{ background: "#fdf4ff", padding: "25px", borderRadius: "14px", border: "1px solid #d946ef" }}>
         <h3 style={{ marginTop: 0, color: "#a21caf", fontSize: "16px", fontWeight: 700 }}>🛠️ Internal Management Panel (Operator Only)</h3>
         <form onSubmit={handleSetPrice} style={{ display: "flex", flexWrap: "wrap", gap: "15px", alignItems: "end" }}>
-          {/* 🛡️ PERBAIKAN INPUT TARGET ID (ANTI-BLANK DI HP) */}
           <div style={{ flex: "1", minWidth: "150px" }}>
             <label style={{ display: "block", fontSize: "12px", fontWeight: 600, marginBottom: "6px", color: "#4b5563" }}>Product Target ID:</label>
             <input type="number" value={adminProductId} onChange={(e) => setAdminProductId(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} required />
           </div>
-          {/* 🛡️ PERBAIKAN INPUT LEDGER RATE (ANTI-BLANK DI HP) */}
           <div style={{ flex: "1", minWidth: "150px" }}>
             <label style={{ display: "block", fontSize: "12px", fontWeight: 600, marginBottom: "6px", color: "#4b5563" }}>New Ledger Rate (ETH):</label>
             <input type="text" value={adminPrice} onChange={(e) => setAdminPrice(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} required />
