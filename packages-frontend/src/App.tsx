@@ -217,7 +217,7 @@ function MainApp() {
     }, 1500);
   };
 
-  // 📡 INTEGRASI TOTAL JALUR VERCEL SERVERLESS FUNCTION API (MURNI JALUR RELATIF)
+  // 📡 INTEGRASI TOTAL JALUR VERCEL SERVERLESS FUNCTION API
   const handleFiatSimulationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -249,7 +249,7 @@ function MainApp() {
       } catch (err: any) {
         console.warn("Koneksi tersumbat sebelum sampai ke API Vercel...", err);
         setDynamicQrisUrl(fallbackQrisUrl);
-        alert("⚠️ KONEKSI VERCEL API GAGAL!\nFrontend gagal memanggil serverless route /api/charge-qris.\nDetail: " + err.message);
+        alert("⚠️ KONEKSI VERCEL API GAGAL!\nDetail: " + err.message);
       } finally {
         setIsFetchingQris(false);
         setShowQrisModal(true); 
@@ -260,16 +260,10 @@ function MainApp() {
     executeOnChainRelayMint();
   };
 
-  const selectedProductData = WHITELABEL_PRODUCTS.find(p => p.id === Number(fiatProductId));
-  const productPriceEth = selectedProductData ? Number(selectedProductData.defaultPriceEth) : 0.05;
-  const convertedFiatPrice = selectedCurrency === "USD" 
-    ? `$${(productPriceEth * ETH_TO_USD_RATE).toFixed(2)} USD`
-    : `Rp ${(productPriceEth * ETH_TO_IDR_RATE).toLocaleString("id-ID")}`;
-
   // Helper untuk menentukan warna latar belakang kartu berdasarkan ID Produk
   const getCardStyle = (id: number) => {
     switch(id) {
-      case 1: return { bg: "#eff6ff", border: "#eedbfe" }; // Soft Ice Blue
+      case 1: return { bg: "#eff6ff", border: "#bfdbfe" }; // Soft Ice Blue
       case 2: return { bg: "#f5f3ff", border: "#ddd6fe" }; // Soft Purple
       case 3: return { bg: "#ecfdf5", border: "#a7f3d0" }; // Soft Mint Emerald
       default: return { bg: "#ffffff", border: "#e5e7eb" };
@@ -305,30 +299,61 @@ function MainApp() {
               <button onClick={() => disconnect()} style={{ background: "#ef4444", color: "white", border: "none", padding: "8px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}>Sign Out</button>
             </div>
           ) : (
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {connectors.map((connector) => (
-                <button 
-                  key={connector.uid} 
-                  onClick={() => handleConnectWallet(connector)} 
-                  style={{ 
-                    background: "#2563eb", 
-                    color: "white", 
-                    border: "none", 
-                    padding: "10px 18px", 
-                    borderRadius: "8px", 
-                    cursor: "pointer", 
-                    fontWeight: 600, 
-                    fontSize: "13px",
-                    boxShadow: "0 4px 6px -1px rgba(37,99,235,0.2)"
-                  }}
-                >
-                  Connect {connector.name}
-                </button>
-              ))}
-            </div>
+            <button 
+              onClick={() => setIsWalletModalOpen(true)} 
+              style={{ background: "#2563eb", color: "white", border: "none", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "13px", boxShadow: "0 4px 10px rgba(37,99,235,0.2)" }}
+            >
+              🔌 Connect Provider Wallet
+            </button>
           )}
         </div>
       </div>
+
+      {/* 📥 DYNAMIC FLOATING OVERLAY MODAL: GERBANG KONEKSI WALLET UTAMA */}
+      {isWalletModalOpen && !isConnected && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100000 }}>
+          <div style={{ backgroundColor: "#ffffff", padding: "35px", borderRadius: "20px", width: "100%", maxWidth: "340px", textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
+              <span style={{ fontWeight: 700, fontSize: "16px", color: "#111827" }}>🔌 Select Web3 Wallet</span>
+              <button type="button" onClick={() => setIsWalletModalOpen(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#9ca3af" }}>✕</button>
+            </div>
+            <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "22px", lineHeight: 1.4 }}>Pilih salah satu penyedia enkripsi di bawah untuk mengaktifkan tanda tangan kriptografi.</p>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {connectors.map((connector) => (
+                <button 
+                  key={connector.uid} 
+                  onClick={() => {
+                    handleConnectWallet(connector);
+                    setIsWalletModalOpen(false);
+                  }} 
+                  style={{ 
+                    background: "#f9fafb", 
+                    color: "#111827", 
+                    border: "1px solid #e5e7eb", 
+                    padding: "14px", 
+                    borderRadius: "12px", 
+                    cursor: "pointer", 
+                    fontWeight: 700, 
+                    fontSize: "14px",
+                    textAlign: "left",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <span>🚀 {connector.name}</span>
+                  <span style={{ fontSize: "11px", color: "#4b5563", background: "#e5e7eb", padding: "2px 6px", borderRadius: "4px" }}>Active</span>
+                </button>
+              ))}
+            </div>
+            <p style={{ fontSize: "11px", color: "#9ca3af", marginTop: "18px", lineHeight: 1.4 }}>
+              *Jika menggunakan HP, pastikan tautan ini dibuka di dalam menu Browser Internal aplikasi MetaMask/Phantom Anda.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* 📥 DYNAMIC POP-UP MODAL QRIS INDONESIA */}
       {showQrisModal && (
@@ -378,13 +403,6 @@ function MainApp() {
         </div>
       )}
 
-      {/* BANNER PERINGATAN KONEKSI DOMPET MOBIL */}
-      {isWalletModalOpen && !isConnected && (
-        <div style={{ background: "#fee2e2", padding: "14px", borderRadius: "10px", marginBottom: "25px", fontSize: "14px", color: "#991b1b", border: "1px solid #fca5a5", fontWeight: "bold", textAlign: "center" }}>
-          ⚠️ ALARM KONEKSI: Silakan ketuk tombol "Connect" warna biru di kanan atas layar untuk mengaktifkan dompet Web3 Anda terlebih dahulu!
-        </div>
-      )}
-
       {/* TRANSACTIONS BROADCAST MONITOR */}
       {(isTxPending || txHash || txError || fiatPaymentStatus === "PROCESSING") && (
         <div style={{ background: "#ffffff", padding: "20px", borderRadius: "12px", marginBottom: "35px", border: "1px solid #e5e7eb", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
@@ -418,12 +436,12 @@ function MainApp() {
                 style={{
                   background: cardTheme.bg,
                   border: `1px solid ${cardTheme.border}`,
-                  borderRadius: "16px",
+                  borderRadius: "18px",
                   padding: "26px",
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
-                  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01)",
+                  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02)",
                   boxSizing: "border-box"
                 }}
               >
@@ -433,8 +451,8 @@ function MainApp() {
                     <span style={{ background: "#ffffff", color: "#1f2937", padding: "5px 12px", borderRadius: "8px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.05em", border: `1px solid ${cardTheme.border}` }}>
                       SKU-0{prod.id}
                     </span>
-                    <span style={{ color: isConnected ? "#10b981" : "#6b7280", fontSize: "12px", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
-                      ● {isConnected ? "Node Ready" : "Wallet Disconnected"}
+                    <span style={{ color: isConnected ? "#10b981" : "#ef4444", fontSize: "12px", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
+                      ● {isConnected ? "Network Live" : "Secure Blocked"}
                     </span>
                   </div>
 
@@ -443,13 +461,39 @@ function MainApp() {
                     {prod.name}
                   </h4>
 
-                  {/* Technical Subtitle */}
                   <p style={{ margin: "0 0 20px 0", fontSize: "13px", color: "#4b5563", lineHeight: 1.5 }}>
                     Enterprise automated whitelabel licensing block module. Complete with decentralized distribution rights metadata.
                   </p>
                 </div>
 
                 <div>
+                  {/* 🛡️ SARAN BERLIAN: BARIS VALIDITAS & INTEGRITAS DATA WALLET BLOCKCHAIN */}
+                  <div style={{ 
+                    background: isConnected ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.06)", 
+                    border: `1px solid ${isConnected ? "#a7f3d0" : "#fca5a5"}`, 
+                    borderRadius: "10px", 
+                    padding: "10px 12px", 
+                    marginBottom: "15px", 
+                    fontSize: "12px" 
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                      <span style={{ fontWeight: 600, color: "#4b5563" }}>Address Integrity:</span>
+                      <span style={{ fontWeight: 700, color: isConnected ? "#047857" : "#b91c1c" }}>
+                        {isConnected ? "🟢 VERIFIED" : "🔴 UNVERIFIED"}
+                      </span>
+                    </div>
+                    <div style={{ color: "#4b5563", fontSize: "11px", fontFamily: "monospace", lineHeight: 1.4 }}>
+                      {isConnected ? (
+                        <>
+                          <strong>Node:</strong> {address?.slice(0, 10)}...{address?.slice(-10)}<br />
+                          <strong>Format:</strong> ECDSA Compliant Hex ✓
+                        </>
+                      ) : (
+                        "Warning: No valid Web3 node wallet detected. Checkout route is locked."
+                      )}
+                    </div>
+                  </div>
+
                   {/* Elegant Dynamic Pricing Grid */}
                   <div style={{ borderTop: `1px solid ${cardTheme.border}`, paddingTop: "16px", marginBottom: "18px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "4px" }}>
@@ -461,15 +505,13 @@ function MainApp() {
                     </div>
                   </div>
 
-                  {/* 🎮 BUTTON REAKTIF DAN RESPONSIF PENUH TERHADAP WALLET CONNECT */}
+                  {/* 🎮 BUTTON REAKTIF: SEKARANG LANGSUNG MENODONG PILIHAN WALLET */}
                   <button
                     type="button"
                     disabled={isTxPending}
                     onClick={() => {
                       if (!isConnected) {
-                        setIsWalletModalOpen(true);
-                        // Otomatis scroll halus ke atas agar user langsung melihat banner warning merah
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        setIsWalletModalOpen(true); // Langsung membuka Floating Modal Pemilih Wallet
                       } else {
                         handleDirectBuy(prod.id, priceEth);
                       }
@@ -503,7 +545,7 @@ function MainApp() {
 
       <div style={{ display: "flex", gap: "25px", flexWrap: "wrap", marginBottom: "40px" }}>
         
-        {/* 📊 RESTORASI WARNA OFF-CHAIN CENTRAL DATABASE LEDGER */}
+        {/* 📊 KOTAK GLOBAL DATABASE ORDER LOGS */}
         <div style={{ background: "#f0f7ff", padding: "25px", borderRadius: "14px", border: "1px solid #3b82f6", flex: "1", minWidth: "300px", boxShadow: "0 4px 6px -1px rgba(59,130,246,0.05)" }}>
           <h3 style={{ marginTop: 0, color: "#1d4ed8", fontSize: "17px", fontWeight: 700 }}>📊 Global Database Order Logs</h3>
           <p style={{ fontSize: "13px", color: "#2563eb", marginTop: "-4px" }}>Unified dashboard recording incoming cross-border settlement event emissions.</p>
@@ -529,7 +571,7 @@ function MainApp() {
           </div>
         </div>
 
-        {/* 💳 RESTORASI WARNA REKAYASA GLOBAL FIAT GATEWAY */}
+        {/* 💳 KOTAK HYBRID INTERNATIONAL FIAT SETTLEMENT ENGINE */}
         <div style={{ background: "#fff7ed", padding: "25px", borderRadius: "14px", border: "1px solid #f97316", flex: "1", minWidth: "300px", boxShadow: "0 4px 6px -1px rgba(249,115,22,0.05)" }}>
           <h3 style={{ marginTop: 0, color: "#c2410c", fontSize: "17px", fontWeight: 700 }}>💳 Hybrid International Fiat Settlement Engine</h3>
           <p style={{ fontSize: "13px", color: "#ea580c", marginTop: "-4px" }}>Simulates Stripe Credit Card (USD) or localized QRIS (IDR) triggering automated relay mints.</p>
