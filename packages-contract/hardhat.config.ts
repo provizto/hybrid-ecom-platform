@@ -1,38 +1,30 @@
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import { defineConfig } from "hardhat/config";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 export default defineConfig({
-  plugins: [hardhatToolboxViemPlugin],
+  plugins: [hardhatToolboxViemPlugin], // 🌟 Sudah dikembalikan menjadi objek tanpa ()
   solidity: {
-    profiles: {
-      default: {
-        version: "0.8.28",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
-      },
-      production: {
-        version: "0.8.28",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
+    version: "0.8.28",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
       },
     },
   },
   networks: {
-    hardhatMainnet: {
-      type: "edr-simulated",
-      chainType: "l1",
-    },
-    // TAMBAHKAN JALUR INI AGAR PORT RPC 8545 AKTIF DAN BISA DIBACA METAMASK
     localhost: {
+      type: "http",
       url: "http://127.0.0.1:8545",
-    }
+    },
+    sepolia: {
+      type: "http",
+      url: process.env.SEPOLIA_RPC_URL || "",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 11155111,
+    },
   },
 });
