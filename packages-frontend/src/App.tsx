@@ -391,7 +391,15 @@ function MainApp() {
           {isTxPending && <p style={{ color: "#d97706", margin: 0, fontSize: "14px", fontWeight: 500 }}>⏳ Processing node signature approval...</p>}
           {txHash && <p style={{ color: "#059669", margin: 0, fontSize: "14px", fontWeight: 600, wordBreak: "break-all" }}>✅ Settled! Tx Hash: <code>{txHash}</code></p>}
           {connectError && <p style={{ color: "#dc2626", margin: 0, fontSize: "14px", fontWeight: 500 }}>❌ Connection Error: {connectError.message}</p>}
-          {txError && <p style={{ color: "#dc2626", margin: 0, fontSize: "14px", fontWeight: 500 }}>❌ Smart Contract Error: {txError.message || "Transaction Rejected"}</p>}
+          {txError && (
+  <p style={{ color: "#dc2626", margin: 0, fontSize: "14px", fontWeight: 500 }}>
+    ❌ Smart Contract Error: {
+      txError.message.includes("Approval Denied") || txError.message.includes("User rejected")
+        ? "Transaksi dibatalkan oleh pengguna (Approval Denied)."
+        : txError.message.split("\n")[0] // Kalau eror kode lain, ambil baris pertamanya saja biar pendek
+    }
+  </p>
+)}
         </div>
       )}
 
