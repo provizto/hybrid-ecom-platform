@@ -1,13 +1,12 @@
 import { http, createConfig } from "wagmi";
 import { mainnet, polygon, polygonAmoy } from "wagmi/chains";
-import { injected, metaMask, phantom } from "wagmi/connectors";
+import { injected, metaMask } from "wagmi/connectors"; // 🌟 Bersih dari 'phantom' yang ilegal
 
 export const config = createConfig({
   chains: [mainnet, polygon, polygonAmoy],
   connectors: [
-    injected(), // Fallback untuk dApp browser bawaan dompet
-    metaMask(), // Memunculkan tombol khusus MetaMask (Pemicu Deep Link)
-    phantom(),  // Memunculkan tombol khusus Phantom (Pemicu Deep Link)
+    injected(), // 🔥 Sakti! Otomatis mendeteksi Phantom, Backpack, dll secara terpisah via EIP-6963
+    metaMask(), // Tombol khusus pengetuk MetaMask
   ],
   transports: {
     [mainnet.id]: http(),
