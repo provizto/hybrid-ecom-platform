@@ -167,13 +167,13 @@ function MainApp() {
     });
   };
 
-  const handleDirectBuy = (id: any, _priceEth: any) => {
+  // 🔥 UPDATE INTEGRASI: Menembak buyDigitalGood dengan argumen dan nominal ETH yang pas
+  const handleDirectBuy = (id: any, priceEth: any) => {
     if (!isConnected || !address) {
       setIsWalletModalOpen(true);
       return;
     }
 
-    // 🚨 DETEKTOR UTAMA: Menghentikan kegagalan silent dan memberikan laporan langsung via Alert
     if (!parsedAbi || !currentContractAddress) {
       alert(`❌ EKSEKUSI WEB3 DIBLOKIR!\n\nDetail Kerusakan Sistem:\n- ABI Kontrak Data: ${parsedAbi ? "🟢 OK (Terbaca)" : "🔴 ERROR (Kosong/Gagal Load)"}\n- Alamat Kontrak Pintar: ${currentContractAddress ? "🟢 OK (Terbaca)" : "🔴 ERROR (Kosong/Undefined)"}\n\nSolusi Bosku:\nPeriksa file .env lokal Anda atau masukkan 'VITE_CONTRACT_ADDRESS' di dashboard Environment Variables Vercel lalu redeploy!`);
       return;
@@ -184,8 +184,9 @@ function MainApp() {
     writeContract({
       address: currentContractAddress,
       abi: parsedAbi,
-      functionName: "mintForFiatBuyer",
-      args: [address, dummyAwsTokenUri, BigInt(id)],
+      functionName: "buyDigitalGood",
+      args: [BigInt(id), dummyAwsTokenUri],
+      value: parseEther(String(priceEth)),
     });
   };
 
