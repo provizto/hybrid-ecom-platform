@@ -36,8 +36,10 @@ contract DigitalGoodsStore is ERC721URIStorage, Ownable {
 
         emit NFTOwnershipMinted(msg.sender, tokenId, productId, awsTokenURI);
 
+        // 🌟 PERBAIKAN MUTAKHIR: Mengganti .transfer() ke metode .call() aman dengan pengecekan status sukses
         if (msg.value > price) {
-            payable(msg.sender).transfer(msg.value - price);
+            (bool success, ) = payable(msg.sender).call{value: msg.value - price}("");
+            require(success, "Gagal mengembalikan uang kembalian");
         }
     }
 
@@ -54,6 +56,9 @@ contract DigitalGoodsStore is ERC721URIStorage, Ownable {
     function withdrawFunds() external onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, "Saldo kosong, tidak ada dana yang bisa ditarik");
-        payable(owner()).transfer(balance);
+        
+        // 🌟 PERBAIKAN MUTAKHIR: Mengganti .transfer() ke metode .call() aman untuk penarikan dana owner
+        (bool success, ) = payable(owner()).call{value: balance}("");
+        require(success, "Gagal menarik dana");
     }
 }

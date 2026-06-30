@@ -31,10 +31,9 @@ async function main() {
 
   const artifact = await hre.artifacts.readArtifact("DigitalGoodsStore");
 
-  // 🌟 JURUS PENYELAMAT:
-  // 1. Jika kontrak lu punya constructor dengan argumen, masukkan ke array [] di bawah ini
-  // 2. gas: 4000000n (meningkatkan limit agar tidak revert karena out-of-gas)
-  const constructorArgs: any[] = []; 
+  // 🌟 JURUS PENYELAMAT SINKRONISASI TYPESCRIPT TYPES:
+  // Menggunakan 'as const' untuk mengunci jumlah elemen argumen awal constructor (initialOwner)
+  const constructorArgs = ["0xC7aC22CBe2C96c308daFBEc609025C03A713Fe01"] as const; 
 
   console.log("Mengirim transaksi deployment ke Sepolia Testnet...");
   
@@ -42,7 +41,7 @@ async function main() {
     const hash = await walletClient.deployContract({
       abi: artifact.abi,
       bytecode: artifact.bytecode as `0x${string}`,
-      args: constructorArgs, // Masukkan argumen di sini jika ada
+      args: constructorArgs, 
       gas: 4000000n,         // Memberikan "ruang napas" lebih besar
     });
 
@@ -58,7 +57,6 @@ async function main() {
   } catch (error: any) {
     console.error("❌ Deployment Gagal!");
     console.error("Pesan Eror:", error.shortMessage || error.message);
-    // Jika ada revert, pesan ini akan memberi tahu alasannya
   }
 }
 
