@@ -18,9 +18,9 @@ interface DbLog {
 }
 
 const cardThemes: Record<number, { bg: string; border: string }> = {
-  1: { bg: "#eff6ff", border: "#bfdbfe" }, // Soft Ice Blue
-  2: { bg: "#f5f3ff", border: "#ddd6fe" }, // Soft Purple
-  3: { bg: "#ecfdf5", border: "#a7f3d0" }  // Soft Mint Emerald
+  1: { bg: "#eff6ff", border: "#bfdbfe" }, 
+  2: { bg: "#f5f3ff", border: "#ddd6fe" }, 
+  3: { bg: "#ecfdf5", border: "#a7f3d0" }  
 };
 
 function MainApp() {
@@ -45,7 +45,7 @@ function MainApp() {
   const [isFetchingQris, setIsFetchingQris] = useState<boolean>(false);
 
   const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
+  const { connect, connectors, error: connectError } = useConnect();
   const { disconnect } = useDisconnect();
 
   const { writeContract, isPending: isTxPending, error: txError, data: txHash } = useWriteContract();
@@ -108,12 +108,9 @@ function MainApp() {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     try {
-      if (typeof window !== "undefined") {
-        const hasInjectedProvider = !!(window as any).ethereum || !!(window as any).phantom?.ethereum;
-        if (hasInjectedProvider) {
-          connect({ connector });
-          return;
-        }
+      if (typeof window !== "undefined" && (window as any).ethereum) {
+        connect({ connector });
+        return;
       }
 
       // 🔥 AUTO DEEP-LINK REDIRECT JIKA DIBUKA DI CHROME/SAFARI HP BIASA
@@ -131,9 +128,8 @@ function MainApp() {
       }
 
       connect({ connector });
-    } catch (err) {
-      console.warn("Jalur deep-link otomatis terpicu...", err);
-      connect({ connector });
+    } catch (err: any) {
+      alert("Gagal memicu operasi koneksi wallet: " + err.message);
     }
   };
 
@@ -159,7 +155,10 @@ function MainApp() {
 
   const handleSetPrice = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!parsedAbi || !currentContractAddress) return;
+    if (!parsedAbi || !currentContractAddress) {
+      alert("❌ Gagal: ABI Kontrak atau Alamat Kontrak Pintar belum dimuat di Panel Manajemen.");
+      return;
+    }
     writeContract({
       address: currentContractAddress,
       abi: parsedAbi,
@@ -173,8 +172,15 @@ function MainApp() {
       setIsWalletModalOpen(true);
       return;
     }
-    if (!parsedAbi || !currentContractAddress) return;
+
+    // 🚨 DETEKTOR UTAMA: Menghentikan kegagalan silent dan memberikan laporan langsung via Alert
+    if (!parsedAbi || !currentContractAddress) {
+      alert(`❌ EKSEKUSI WEB3 DIBLOKIR!\n\nDetail Kerusakan Sistem:\n- ABI Kontrak Data: ${parsedAbi ? "🟢 OK (Terbaca)" : "🔴 ERROR (Kosong/Gagal Load)"}\n- Alamat Kontrak Pintar: ${currentContractAddress ? "🟢 OK (Terbaca)" : "🔴 ERROR (Kosong/Undefined)"}\n\nSolusi Bosku:\nPeriksa file .env lokal Anda atau masukkan 'VITE_CONTRACT_ADDRESS' di dashboard Environment Variables Vercel lalu redeploy!`);
+      return;
+    }
+
     const dummyAwsTokenUri = `https://aws-s3-digital-goods-store.com/metadata/product-${id}.json`;
+    
     writeContract({
       address: currentContractAddress,
       abi: parsedAbi,
@@ -297,7 +303,7 @@ function MainApp() {
         </div>
       </div>
 
-      {/* 📥 FLOATING OVERLAY MODAL: SEKARANG MEMUNCULKAN SEMUA TOMBOL WALLET SECARA EKSPLISIT */}
+      {/* 📥 FLOATING OVERLAY MODAL */}
       {isWalletModalOpen && !isConnected && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100000 }}>
           <div style={{ backgroundColor: "#ffffff", padding: "35px", borderRadius: "20px", width: "100%", maxWidth: "340px", textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
@@ -309,7 +315,6 @@ function MainApp() {
             
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {(connectors || []).map((connector) => {
-                // Formatting nama tombol agar terlihat rapi dan ramah di mata pembeli
                 let displayWalletName = connector.name || "Injected Node";
                 if (displayWalletName.toLowerCase() === "injected") displayWalletName = "Browser Default Extension";
                 
@@ -378,17 +383,18 @@ function MainApp() {
       )}
 
       {/* TRANSACTIONS BROADCAST MONITOR */}
-      {(isTxPending || txHash || txError || fiatPaymentStatus === "PROCESSING") && (
+      {(isTxPending || txHash || txError || connectError || fiatPaymentStatus === "PROCESSING") && (
         <div style={{ background: "#ffffff", padding: "20px", borderRadius: "12px", marginBottom: "35px", border: "1px solid #e5e7eb" }}>
           <h4 style={{ marginTop: 0, marginBottom: "8px", fontWeight: 700, fontSize: "14px", textTransform: "uppercase", color: "#4b5563" }}>⚡ System Broadcast Monitor:</h4>
           {fiatPaymentStatus === "PROCESSING" && <p style={{ color: "#2563eb", margin: 0, fontSize: "14px", fontWeight: 500 }}>⏳ Awaiting confirmation...</p>}
           {isTxPending && <p style={{ color: "#d97706", margin: 0, fontSize: "14px", fontWeight: 500 }}>⏳ Processing node signature approval...</p>}
           {txHash && <p style={{ color: "#059669", margin: 0, fontSize: "14px", fontWeight: 600, wordBreak: "break-all" }}>✅ Settled! Tx Hash: <code>{txHash}</code></p>}
-          {txError && <p style={{ color: "#dc2626", margin: 0, fontSize: "14px", fontWeight: 500 }}>❌ Failed: {txError.message || "Transaction Rejected"}</p>}
+          {connectError && <p style={{ color: "#dc2626", margin: 0, fontSize: "14px", fontWeight: 500 }}>❌ Connection Error: {connectError.message}</p>}
+          {txError && <p style={{ color: "#dc2626", margin: 0, fontSize: "14px", fontWeight: 500 }}>❌ Smart Contract Error: {txError.message || "Transaction Rejected"}</p>}
         </div>
       )}
 
-      {/* 👑 ELEGAN & COLORFUL SOLUTIONS MARKETPLACE */}
+      {/* 👑 SOLUTIONS MARKETPLACE */}
       <div style={{ marginBottom: "50px" }}>
         <h3 style={{ margin: "0 0 6px 0", fontSize: "20px", fontWeight: 700, color: "#111827" }}>🛒 B2B Digital Solutions Catalog</h3>
         <p style={{ margin: "0 0 25px 0", fontSize: "14px", color: "#6b7280" }}>Direct on-chain procurement infrastructure for enterprise infrastructure items.</p>
@@ -429,7 +435,6 @@ function MainApp() {
                     {prod.name}
                   </h4>
 
-                  {/* 🎯 PERBAIKAN DESKRIPSI: Memanggil data dinamis unik dari products.ts */}
                   <p style={{ margin: "0 0 20px 0", fontSize: "13px", color: "#4b5563", lineHeight: 1.5 }}>
                     {prod.description || "Enterprise whitelabel licensing block module complete with decentralized metadata distribution."}
                   </p>
@@ -571,7 +576,7 @@ function MainApp() {
             )}
 
             <div>
-              <label style={{ display: "block", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", marginBottom: "4px", color: "#4b5563" }}>3. Select Solutions Product:</label>
+              <label style={{ display: "block", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: "4px", color: "#4b5563" }}>3. Select Solutions Product:</label>
               <select value={fiatProductId} onChange={(e) => setFiatProductId(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }}>
                 {(WHITELABEL_PRODUCTS || []).map((p: Product) => (
                   <option key={p.id} value={p.id} style={{ backgroundColor: "#ffffff", color: "#111827" }}>{p.name}</option>
