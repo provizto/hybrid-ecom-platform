@@ -266,6 +266,16 @@ function MainApp() {
     ? `$${(productPriceEth * ETH_TO_USD_RATE).toFixed(2)} USD`
     : `Rp ${(productPriceEth * ETH_TO_IDR_RATE).toLocaleString("id-ID")}`;
 
+  // Helper untuk menentukan warna latar belakang kartu berdasarkan ID Produk
+  const getCardStyle = (id: number) => {
+    switch(id) {
+      case 1: return { bg: "#eff6ff", border: "#eedbfe" }; // Soft Ice Blue
+      case 2: return { bg: "#f5f3ff", border: "#ddd6fe" }; // Soft Purple
+      case 3: return { bg: "#ecfdf5", border: "#a7f3d0" }; // Soft Mint Emerald
+      default: return { bg: "#ffffff", border: "#e5e7eb" };
+    }
+  };
+
   return (
     <div style={{ 
       backgroundColor: "#fafafa", 
@@ -289,10 +299,10 @@ function MainApp() {
         <div>
           {isConnected ? (
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <span style={{ fontSize: "13px", background: "#f3f4f6", color: "#1f2937", padding: "8px 14px", borderRadius: "30px", fontWeight: 600 }}>
-                • Connected: {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""}
+              <span style={{ fontSize: "13px", background: "#111827", color: "#ffffff", padding: "8px 14px", borderRadius: "30px", fontWeight: 600 }}>
+                • Wallet Connected: {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : ""}
               </span>
-              <button onClick={() => disconnect()} style={{ background: "#ef4444", color: "white", border: "none", padding: "8px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: 600, transition: "0.2s" }}>Sign Out</button>
+              <button onClick={() => disconnect()} style={{ background: "#ef4444", color: "white", border: "none", padding: "8px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontWeight: 600 }}>Sign Out</button>
             </div>
           ) : (
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
@@ -301,7 +311,7 @@ function MainApp() {
                   key={connector.uid} 
                   onClick={() => handleConnectWallet(connector)} 
                   style={{ 
-                    background: "#111827", 
+                    background: "#2563eb", 
                     color: "white", 
                     border: "none", 
                     padding: "10px 18px", 
@@ -309,7 +319,7 @@ function MainApp() {
                     cursor: "pointer", 
                     fontWeight: 600, 
                     fontSize: "13px",
-                    boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+                    boxShadow: "0 4px 6px -1px rgba(37,99,235,0.2)"
                   }}
                 >
                   Connect {connector.name}
@@ -370,8 +380,8 @@ function MainApp() {
 
       {/* BANNER PERINGATAN KONEKSI DOMPET MOBIL */}
       {isWalletModalOpen && !isConnected && (
-        <div style={{ background: "#fef3c7", padding: "14px", borderRadius: "10px", marginBottom: "25px", fontSize: "13px", color: "#92400e", border: "1px solid #fde68a" }}>
-          💡 <strong>Petunjuk Koneksi:</strong> Ketuk salah satu tombol dompet di bar navigasi atas. Jika menggunakan HP, pastikan tautan ini dibuka di dalam menu browser internal aplikasi MetaMask/Backpack/Phantom Anda.
+        <div style={{ background: "#fee2e2", padding: "14px", borderRadius: "10px", marginBottom: "25px", fontSize: "14px", color: "#991b1b", border: "1px solid #fca5a5", fontWeight: "bold", textAlign: "center" }}>
+          ⚠️ ALARM KONEKSI: Silakan ketuk tombol "Connect" warna biru di kanan atas layar untuk mengaktifkan dompet Web3 Anda terlebih dahulu!
         </div>
       )}
 
@@ -390,7 +400,7 @@ function MainApp() {
         </div>
       )}
 
-      {/* 👑 ELEGAN & MINIMALIS SOLUTIONS MARKETPLACE */}
+      {/* 👑 ELEGAN & COLORFUL MINIMALIS SOLUTIONS MARKETPLACE */}
       <div style={{ marginBottom: "50px" }}>
         <h3 style={{ margin: "0 0 6px 0", fontSize: "20px", fontWeight: 700, color: "#111827", letterSpacing: "-0.01em" }}>🛒 B2B Digital Solutions Catalog</h3>
         <p style={{ margin: "0 0 25px 0", fontSize: "14px", color: "#6b7280" }}>Direct on-chain procurement infrastructure for enterprise infrastructure items.</p>
@@ -400,75 +410,89 @@ function MainApp() {
             const priceEth = prod.defaultPriceEth;
             const priceUsd = (Number(priceEth) * ETH_TO_USD_RATE).toFixed(0);
             const priceIdr = (Number(priceEth) * ETH_TO_IDR_RATE).toLocaleString("id-ID");
+            const cardTheme = getCardStyle(prod.id);
 
             return (
               <div 
                 key={prod.id} 
                 style={{
-                  background: "#ffffff",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "14px",
-                  padding: "24px",
+                  background: cardTheme.bg,
+                  border: `1px solid ${cardTheme.border}`,
+                  borderRadius: "16px",
+                  padding: "26px",
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+                  boxShadow: "0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01)",
                   boxSizing: "border-box"
                 }}
               >
                 <div>
                   {/* SKU ID Badge */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ background: "#f3f4f6", color: "#4b5563", padding: "4px 10px", borderRadius: "6px", fontSize: "11px", fontWeight: 600, letterSpacing: "0.05em" }}>
+                    <span style={{ background: "#ffffff", color: "#1f2937", padding: "5px 12px", borderRadius: "8px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.05em", border: `1px solid ${cardTheme.border}` }}>
                       SKU-0{prod.id}
                     </span>
-                    <span style={{ color: "#10b981", fontSize: "12px", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
-                      • Ready Route
+                    <span style={{ color: isConnected ? "#10b981" : "#6b7280", fontSize: "12px", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
+                      ● {isConnected ? "Node Ready" : "Wallet Disconnected"}
                     </span>
                   </div>
 
                   {/* Product Title */}
-                  <h4 style={{ margin: "16px 0 8px 0", fontSize: "17px", fontWeight: 600, color: "#111827", lineHeight: 1.4 }}>
+                  <h4 style={{ margin: "18px 0 8px 0", fontSize: "18px", fontWeight: 700, color: "#111827", lineHeight: 1.4 }}>
                     {prod.name}
                   </h4>
 
-                  {/* Technical Subtitle / Description Dummy */}
-                  <p style={{ margin: "0 0 20px 0", fontSize: "13px", color: "#6b7280", lineHeight: 1.5 }}>
+                  {/* Technical Subtitle */}
+                  <p style={{ margin: "0 0 20px 0", fontSize: "13px", color: "#4b5563", lineHeight: 1.5 }}>
                     Enterprise automated whitelabel licensing block module. Complete with decentralized distribution rights metadata.
                   </p>
                 </div>
 
                 <div>
                   {/* Elegant Dynamic Pricing Grid */}
-                  <div style={{ borderTop: "1px solid #f3f4f6", paddingTop: "16px", marginBottom: "18px" }}>
+                  <div style={{ borderTop: `1px solid ${cardTheme.border}`, paddingTop: "16px", marginBottom: "18px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "4px" }}>
-                      <span style={{ fontSize: "18px", fontWeight: 700, color: "#111827" }}>{priceEth} ETH</span>
-                      <span style={{ fontSize: "13px", fontWeight: 500, color: "#4b5563" }}>${priceUsd} USD</span>
+                      <span style={{ fontSize: "20px", fontWeight: 800, color: "#111827" }}>{priceEth} ETH</span>
+                      <span style={{ fontSize: "14px", fontWeight: 600, color: "#374151" }}>${priceUsd} USD</span>
                     </div>
-                    <div style={{ fontSize: "12px", color: "#9ca3af", fontWeight: 500 }}>
+                    <div style={{ fontSize: "12px", color: "#6b7280", fontWeight: 500 }}>
                       Equiv. value: Rp {priceIdr} IDR
                     </div>
                   </div>
 
-                  {/* Sleek Web3 Interaction Button */}
+                  {/* 🎮 BUTTON REAKTIF DAN RESPONSIF PENUH TERHADAP WALLET CONNECT */}
                   <button
                     type="button"
                     disabled={isTxPending}
-                    onClick={() => handleDirectBuy(prod.id, priceEth)}
+                    onClick={() => {
+                      if (!isConnected) {
+                        setIsWalletModalOpen(true);
+                        // Otomatis scroll halus ke atas agar user langsung melihat banner warning merah
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      } else {
+                        handleDirectBuy(prod.id, priceEth);
+                      }
+                    }}
                     style={{
                       width: "100%",
-                      background: "#111827",
+                      background: !isConnected ? "#111827" : isTxPending ? "#6b7280" : "#2563eb",
                       color: "#ffffff",
                       border: "none",
-                      padding: "12px 0",
-                      borderRadius: "8px",
+                      padding: "13px 0",
+                      borderRadius: "10px",
                       fontSize: "13px",
-                      fontWeight: 600,
+                      fontWeight: 700,
                       cursor: "pointer",
-                      transition: "background 0.2s",
+                      boxShadow: isConnected && !isTxPending ? "0 4px 10px rgba(37,99,235,0.2)" : "none",
+                      transition: "all 0.2s"
                     }}
                   >
-                    {isTxPending ? "Authorizing Ledger..." : "⚡ Purchase via Web3 Node"}
+                    {!isConnected 
+                      ? "🔌 Connect Wallet to Buy" 
+                      : isTxPending 
+                        ? "⏳ Authorizing Ledger..." 
+                        : "⚡ Purchase via Web3 Node"}
                   </button>
                 </div>
               </div>
@@ -479,19 +503,19 @@ function MainApp() {
 
       <div style={{ display: "flex", gap: "25px", flexWrap: "wrap", marginBottom: "40px" }}>
         
-        {/* OFF-CHAIN CENTRAL DATABASE LEDGER */}
-        <div style={{ background: "#ffffff", padding: "25px", borderRadius: "14px", border: "1px solid #e5e7eb", flex: "1", minWidth: "300px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-          <h3 style={{ marginTop: 0, color: "#111827", fontSize: "16px", fontWeight: 700 }}>📊 Global Database Order Logs</h3>
-          <p style={{ fontSize: "13px", color: "#6b7280", marginTop: "-4px" }}>Unified dashboard recording incoming cross-border settlement event emissions.</p>
+        {/* 📊 RESTORASI WARNA OFF-CHAIN CENTRAL DATABASE LEDGER */}
+        <div style={{ background: "#f0f7ff", padding: "25px", borderRadius: "14px", border: "1px solid #3b82f6", flex: "1", minWidth: "300px", boxShadow: "0 4px 6px -1px rgba(59,130,246,0.05)" }}>
+          <h3 style={{ marginTop: 0, color: "#1d4ed8", fontSize: "17px", fontWeight: 700 }}>📊 Global Database Order Logs</h3>
+          <p style={{ fontSize: "13px", color: "#2563eb", marginTop: "-4px" }}>Unified dashboard recording incoming cross-border settlement event emissions.</p>
           
           <div style={{ maxHeight: "280px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px", marginTop: "15px" }}>
             {dbLogs.length === 0 ? (
-              <div style={{ background: "#ffffff", padding: "20px", borderRadius: "8px", textAlign: "center", color: "#9ca3af", border: "1px dashed #e5e7eb", fontSize: "13px" }}>
+              <div style={{ background: "#ffffff", padding: "20px", borderRadius: "8px", textAlign: "center", color: "#9ca3af", border: "1px dashed #bfdbfe", fontSize: "13px" }}>
                 📭 No dynamic billing data synchronized yet.
               </div>
             ) : (
               dbLogs.map((log: DbLog, index: number) => (
-                <div key={index} style={{ background: "#f9fafb", padding: "14px", borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: "12px" }}>
+                <div key={index} style={{ background: "#ffffff", padding: "14px", borderRadius: "8px", border: "1px solid #bfdbfe", fontSize: "12px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
                     <span style={{ fontWeight: 700, color: "#059669" }}>📩 Token ID: #{log.tokenId} Settled</span>
                     <span style={{ color: "#9ca3af" }}>{log.timestamp}</span>
@@ -505,14 +529,14 @@ function MainApp() {
           </div>
         </div>
 
-        {/* REKAYASA GLOBAL FIAT GATEWAY DENGAN SELECTOR USD/IDR */}
-        <div style={{ background: "#ffffff", padding: "25px", borderRadius: "14px", border: "1px solid #e5e7eb", flex: "1", minWidth: "300px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-          <h3 style={{ marginTop: 0, color: "#111827", fontSize: "16px", fontWeight: 700 }}>💳 Hybrid International Fiat Settlement Engine</h3>
-          <p style={{ fontSize: "13px", color: "#6b7280", marginTop: "-4px" }}>Simulates Stripe Credit Card (USD) or localized QRIS (IDR) triggering automated relay mints.</p>
+        {/* 💳 RESTORASI WARNA REKAYASA GLOBAL FIAT GATEWAY */}
+        <div style={{ background: "#fff7ed", padding: "25px", borderRadius: "14px", border: "1px solid #f97316", flex: "1", minWidth: "300px", boxShadow: "0 4px 6px -1px rgba(249,115,22,0.05)" }}>
+          <h3 style={{ marginTop: 0, color: "#c2410c", fontSize: "17px", fontWeight: 700 }}>💳 Hybrid International Fiat Settlement Engine</h3>
+          <p style={{ fontSize: "13px", color: "#ea580c", marginTop: "-4px" }}>Simulates Stripe Credit Card (USD) or localized QRIS (IDR) triggering automated relay mints.</p>
           
           <form onSubmit={handleFiatSimulationSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "15px" }}>
             <div>
-              <label style={{ display: "block", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: "6px", color: "#4b5563" }}>1. Choose Target Currency Settlement Option:</label>
+              <label style={{ display: "block", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: "6px", color: "#4b5563" }}>1. Choose Target Currency Settlement Option:</label>
               <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
                 <label style={{ fontSize: "13px", fontWeight: 600, cursor: "pointer", color: "#111827" }}>
                   <input type="radio" name="currency" value="USD" checked={selectedCurrency === "USD"} onChange={() => setSelectedCurrency("USD")} style={{ marginRight: "6px" }} />
@@ -526,11 +550,11 @@ function MainApp() {
             </div>
 
             {selectedCurrency === "IDR" ? (
-              <div style={{ marginTop: "4px", padding: "12px", backgroundColor: "#f0fdf4", borderRadius: "8px", border: "1px solid #bbf7d0", fontSize: "12px", color: "#166534", fontWeight: 500 }}>
+              <div style={{ marginTop: "4px", padding: "12px", backgroundColor: "#ffffff", borderRadius: "8px", border: "1px solid #fed7aa", fontSize: "12px", color: "#c2410c", fontWeight: 600 }}>
                 🎯 <strong>Lokal QRIS Aktif:</strong> Klik tombol simulasi di bawah untuk langsung memunculkan Barcode Pembayaran Nasional Instan.
               </div>
             ) : (
-              <div style={{ marginTop: "4px", backgroundColor: "#f9fafb", padding: "14px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+              <div style={{ marginTop: "4px", backgroundColor: "#ffffff", padding: "14px", borderRadius: "8px", border: "1px solid #fed7aa" }}>
                 <label style={{ display: "block", fontSize: "11px", fontWeight: 600, marginBottom: "6px", color: "#111827" }}>💳 MoonPay / Stripe Secured Credit Card Inputs:</label>
                 <input type="text" placeholder="Card Number (4111 2222 3333 4444)" style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", marginBottom: "8px", boxSizing: "border-box" }} required />
                 
@@ -543,17 +567,17 @@ function MainApp() {
 
             <div>
               <label style={{ display: "block", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: "4px", color: "#4b5563" }}>3. Select Solutions Product:</label>
-              <select value={fiatProductId} onChange={(e) => setFiatProductId(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box" }}>
+              <select value={fiatProductId} onChange={(e) => setFiatProductId(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff" }}>
                 {WHITELABEL_PRODUCTS.map((p: Product) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
 
-            <div style={{ background: "#f3f4f6", padding: "12px", borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: "13px", margin: "4px 0" }}>
-              <strong>Calculated Billing Value:</strong> <span style={{ color: "#111827", fontWeight: 700 }}>{convertedFiatPrice}</span> 
+            <div style={{ background: "#ffffff", padding: "12px", borderRadius: "8px", border: "1px solid #fed7aa", fontSize: "13px", margin: "4px 0" }}>
+              <strong>Calculated Billing Value:</strong> <span style={{ color: "#c2410c", fontWeight: 700 }}>{convertedFiatPrice}</span> 
               <span style={{ fontSize: "11px", color: "#6b7280", marginLeft: "5px" }}>({selectedProductData?.defaultPriceEth} ETH Equiv)</span>
             </div>
 
-            <button type="submit" disabled={fiatPaymentStatus === "PROCESSING" || isFetchingQris} style={{ width: "100%", background: "#111827", color: "white", border: "none", padding: "12px", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "13px" }}>
+            <button type="submit" disabled={fiatPaymentStatus === "PROCESSING" || isFetchingQris} style={{ width: "100%", background: "#f97316", color: "white", border: "none", padding: "12px", borderRadius: "8px", cursor: "pointer", fontWeight: 700, fontSize: "13px", boxShadow: "0 4px 6px -1px rgba(249,115,22,0.2)" }}>
               {isFetchingQris 
                 ? "Membuka Gerbang API Midtrans..." 
                 : fiatPaymentStatus === "PROCESSING"
@@ -566,18 +590,18 @@ function MainApp() {
       </div>
 
       {/* INTERNAL MANAGEMENT CONTROL */}
-      <div style={{ background: "#ffffff", padding: "25px", borderRadius: "14px", border: "1px solid #e5e7eb", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-        <h3 style={{ marginTop: 0, color: "#111827", fontSize: "16px", fontWeight: 700 }}>🛠️ Internal Management Panel (Operator Only)</h3>
+      <div style={{ background: "#fdf4ff", padding: "25px", borderRadius: "14px", border: "1px solid #d946ef", boxShadow: "0 4px 6px -1px rgba(217,70,239,0.03)" }}>
+        <h3 style={{ marginTop: 0, color: "#a21caf", fontSize: "16px", fontWeight: 700 }}>🛠️ Internal Management Panel (Operator Only)</h3>
         <form onSubmit={handleSetPrice} style={{ display: "flex", flexWrap: "wrap", gap: "15px", alignItems: "end" }}>
           <div style={{ flex: "1", minWidth: "150px" }}>
             <label style={{ display: "block", fontSize: "12px", fontWeight: 600, marginBottom: "6px", color: "#4b5563" }}>Product Target ID:</label>
-            <input type="number" value={adminProductId} onChange={(e) => setAdminProductId(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db", boxSizing: "border-box" }} required />
+            <input type="number" value={adminProductId} onChange={(e) => setAdminProductId(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db", boxSizing: "border-box", backgroundColor: "#ffffff" }} required />
           </div>
           <div style={{ flex: "1", minWidth: "150px" }}>
             <label style={{ display: "block", fontSize: "12px", fontWeight: 600, marginBottom: "6px", color: "#4b5563" }}>New Ledger Rate (ETH):</label>
-            <input type="text" value={adminPrice} onChange={(e) => setAdminPrice(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db", boxSizing: "border-box" }} required />
+            <input type="text" value={adminPrice} onChange={(e) => setAdminPrice(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db", boxSizing: "border-box", backgroundColor: "#ffffff" }} required />
           </div>
-          <button type="submit" disabled={!isConnected || isTxPending} style={{ background: "#111827", color: "white", border: "none", padding: "11px 22px", borderRadius: "6px", cursor: "pointer", fontWeight: 600 }}>
+          <button type="submit" disabled={!isConnected || isTxPending} style={{ background: "#d946ef", color: "white", border: "none", padding: "11px 22px", borderRadius: "6px", cursor: "pointer", fontWeight: 600, boxShadow: "0 4px 6px -1px rgba(217,70,239,0.2)" }}>
             Override Price Rate
           </button>
         </form>
