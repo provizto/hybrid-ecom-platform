@@ -147,18 +147,34 @@ function MainApp() {
     }
   }, [txHash]);
 
-  // 🔌 INTERSTELLAR WEB3 PROVIDER ENGINE W/ MOBILE DEEP LINK PROTECTION
+  // 🔌 UNIFIED INTERSTELLAR WEB3 MOBILE ROUTER WITH INTEGRATED SHIELD
   const handleConnectWallet = async (connector: any) => {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const cleanUrl = window.location.href.replace(/^https?:\/\//, "");
     const encodedUrl = encodeURIComponent(window.location.href);
 
-    // Handle Static Mobile Fallback Strings
+    // GUARD DETECTOR: Cek apakah user sudah berada di dApp Browser internal (MetaMask / Phantom App)
+    const isInAppWalletBrowser = typeof window !== "undefined" && (!!(window as any).ethereum || !!(window as any).phantom);
+
+    if (isInAppWalletBrowser) {
+      if (typeof connector === "string") {
+        // Jika user klik tombol teks manual saat di dalam dApp browser, pasangkan ke provider injected aktif
+        const activeInjected = connectors.find(c => c.id === "injected" || c.name.toLowerCase().includes("default") || c.name.toLowerCase().includes("browser"));
+        if (activeInjected) connect({ connector: activeInjected });
+        else if (connectors.length > 0) connect({ connector: connectors[0] });
+        return;
+      } else {
+        // Jika klik objek koin asli wagmi, eksekusi langsung tanpa pemicu deep link ulang
+        connect({ connector });
+        return;
+      }
+    }
+
+    // FALLBACK LINK ENGINE: Hanya dipicu ketika user masih berada di Chrome / Safari Mobile biasa
     if (typeof connector === "string") {
       if (connector === "phantom") {
         window.location.href = `https://phantom.app/ul/browse/${encodedUrl}`;
       } else if (connector === "backpack") {
-        // FIX: Menggunakan spesifikasi resmi Universal Link Backpack Docs (Wajib url-encode & ref parameter)
         window.location.href = `https://backpack.app/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`;
       }
       return;
@@ -169,11 +185,6 @@ function MainApp() {
     const cId = connector.id ? connector.id.toLowerCase() : "";
 
     try {
-      if (typeof window !== "undefined" && (window as any).ethereum && !isMobile) {
-        connect({ connector });
-        return;
-      }
-
       if (isMobile) {
         if (cName.includes("metamask") || cId.includes("metamask")) {
           window.location.href = `https://metamask.app.link/dapp/${cleanUrl}`;
@@ -184,7 +195,6 @@ function MainApp() {
           return;
         }
         if (cName.includes("backpack") || cId.includes("backpack")) {
-          // FIX: Penyesuaian otomatis untuk deteksi runtime mobile
           window.location.href = `https://backpack.app/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`;
           return;
         }
@@ -277,7 +287,6 @@ function MainApp() {
     if (onboardingStrategy === "STRATEGY_2") {
       targetDeliveryAddress = fiatDeliveryAddress.trim() || (address ? String(address) : "0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5");
     } else {
-      // Strategy 1: Privy Auto Email Wallet Simulation
       targetDeliveryAddress = "0xE74D76735eCcB986BF5f91A25B3dCe5dfDb2669e"; 
     }
 
