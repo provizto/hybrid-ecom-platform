@@ -566,12 +566,44 @@ function MainApp() {
               <div style={{ marginTop: "4px", padding: "12px", backgroundColor: "#ffffff", borderRadius: "8px", border: "1px solid #fed7aa", fontSize: "12px", color: "#c2410c", fontWeight: 600 }}>🎯 QRIS Core Active. Kode QR dinamis siap meluncur.</div>
             ) : (
               <div style={{ marginTop: "4px", backgroundColor: "#ffffff", padding: "14px", borderRadius: "8px", border: "1px solid #fed7aa" }}>
-                <input type="text" placeholder="Card Number" style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", marginBottom: "8px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} required />
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                  <input type="text" placeholder="MM / YY" style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} required />
-                  <input type="password" placeholder="CVC" maxLength={3} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} required />
-                </div>
-              </div>
+  <input 
+    type="text" 
+    placeholder="0000 0000 0000 0000" 
+    maxLength={19} 
+    onChange={(e) => {
+      // Auto format: 4-4-4-4
+      let value = e.target.value.replace(/\D/g, "");
+      value = value.replace(/(.{4})/g, "$1 ").trim();
+      e.target.value = value;
+    }}
+    style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", marginBottom: "8px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827", fontFamily: "monospace" }} 
+    required 
+  />
+  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+    <input 
+      type="text" 
+      placeholder="MM / YYYY" 
+      maxLength={9} 
+      onChange={(e) => {
+        // Auto format: MM / YYYY
+        let value = e.target.value.replace(/\D/g, "");
+        if (value.length > 2) {
+          value = value.slice(0, 2) + " / " + value.slice(2, 6);
+        }
+        e.target.value = value;
+      }}
+      style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} 
+      required 
+    />
+    <input 
+      type="password" 
+      placeholder="CVC" 
+      maxLength={3} 
+      style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} 
+      required 
+    />
+  </div>
+</div>
             )}
 
             <div>
