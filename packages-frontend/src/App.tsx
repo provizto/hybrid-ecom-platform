@@ -151,13 +151,15 @@ function MainApp() {
   const handleConnectWallet = async (connector: any) => {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const cleanUrl = window.location.href.replace(/^https?:\/\//, "");
+    const encodedUrl = encodeURIComponent(window.location.href);
 
     // Handle Static Mobile Fallback Strings
     if (typeof connector === "string") {
       if (connector === "phantom") {
-        window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(window.location.href)}`;
+        window.location.href = `https://phantom.app/ul/browse/${encodedUrl}`;
       } else if (connector === "backpack") {
-        window.location.href = `https://backpack.app/open/${cleanUrl}`;
+        // FIX: Menggunakan spesifikasi resmi Universal Link Backpack Docs (Wajib url-encode & ref parameter)
+        window.location.href = `https://backpack.app/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`;
       }
       return;
     }
@@ -178,11 +180,12 @@ function MainApp() {
           return;
         }
         if (cName.includes("phantom") || cId.includes("phantom")) {
-          window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(window.location.href)}`;
+          window.location.href = `https://phantom.app/ul/browse/${encodedUrl}`;
           return;
         }
         if (cName.includes("backpack") || cId.includes("backpack")) {
-          window.location.href = `https://backpack.app/open/${cleanUrl}`;
+          // FIX: Penyesuaian otomatis untuk deteksi runtime mobile
+          window.location.href = `https://backpack.app/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`;
           return;
         }
       }
