@@ -157,7 +157,7 @@ function MainApp() {
       if (connector === "phantom") {
         window.location.href = `https://phantom.app/ul/browse/${cleanUrl}`;
       } else if (connector === "backpack") {
-        window.location.href = `https://backpack.app/ul/browse/${cleanUrl}`;
+        window.location.href = `https://backpack.app/ul/v1/browse/${cleanUrl}`;
       }
       return;
     }
@@ -182,7 +182,7 @@ function MainApp() {
           return;
         }
         if (cName.includes("backpack") || cId.includes("backpack")) {
-          window.location.href = `https://backpack.app/ul/browse/${cleanUrl}`;
+          window.location.href = `https://backpack.app/ul/v1/browse/${cleanUrl}`;
           return;
         }
       }
