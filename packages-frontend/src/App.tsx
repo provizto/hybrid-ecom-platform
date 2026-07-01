@@ -29,25 +29,25 @@ function MainApp() {
   const [adminProductId, setAdminProductId] = useState<string>("1");
   const [adminPrice, setAdminPrice] = useState<string>("0.05");
 
-  // State untuk Rig Pembayaran Fiat Global
+  // Rig Setup for Global Fiat Settlement
   const [fiatProductId, setFiatProductId] = useState<string>("3");
   const [fiatPaymentStatus, setFiatPaymentStatus] = useState<string>("IDLE");
   const [selectedCurrency, setSelectedCurrency] = useState<string>("USD"); 
   
-  // State Alamat Pengiriman Manual
+  // Manual Delivery Hex Address State
   const [fiatDeliveryAddress, setFiatDeliveryAddress] = useState<string>("");
 
-  // PEMILIHAN STRATEGI: Hanya Strategy 2 (Form Manual) & Strategy 1 (Email Embedded Wallet)
+  // ONBOARDING STRATEGY: Strategy 2 (Manual Input) & Strategy 1 (Privy Automated Embedded Wallet)
   const [onboardingStrategy, setOnboardingStrategy] = useState<string>("STRATEGY_2"); 
   const [userEmailSimulation, setUserEmailSimulation] = useState<string>("");
 
   const [dbLogs, setDbLogs] = useState<DbLog[]>([]);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState<boolean>(false);
   
-  // 🏪 State Mengontrol Pop-up Barcode QRIS Indonesia
+  // 🏪 State controlling Pop-up dynamic QRIS Code
   const [showQrisModal, setShowQrisModal] = useState<boolean>(false);
   
-  // 🔗 State Menampung URL QRIS Asli yang Dikirim dari Backend Server Lu
+  // 🔗 State capturing dynamic server-generated QRIS endpoints
   const [dynamicQrisUrl, setDynamicQrisUrl] = useState<string>("");
   const [isFetchingQris, setIsFetchingQris] = useState<boolean>(false);
 
@@ -73,7 +73,7 @@ function MainApp() {
     if (finalAbi) setParsedAbi(finalAbi);
   }, []);
 
-  // 🔄 AUTO FILL ALAMAT: Jika user menghubungkan wallet, otomatis isikan ke form input fiat
+  // 🔄 AUTO-FILL: Dynamically populate input forms if native web3 provider connects
   useEffect(() => {
     if (isConnected && address) {
       setFiatDeliveryAddress(String(address));
@@ -89,7 +89,7 @@ function MainApp() {
     query: { enabled: !!parsedAbi && !!currentContractAddress }
   });
 
-  // 📡 Fungsi listener real-time di latar belakang
+  // 📡 Real-time background network node log emission listener
   useWatchContractEvent({
     address: currentContractAddress,
     abi: parsedAbi || [],
@@ -128,7 +128,7 @@ function MainApp() {
     },
   });
 
-  // 🔄 LOGIKA AUTO-UPDATE LOGS INTERFACES
+  // 🔄 REAL-TIME LOG INTERFACE SYNCHRONIZATION UPON TRANSACTION RECEIPT
   useEffect(() => {
     if (txHash && dbLogs.length > 0) {
       const hasPendingLog = dbLogs.some(log => log.tokenId === "Minting..." || log.tokenId === "Relay-Mint");
@@ -147,7 +147,7 @@ function MainApp() {
     }
   }, [txHash]);
 
-  // 🔌 ENGINE KONEKSI WALLET MUTAKHIR
+  // 🔌 INTERSTELLAR WEB3 PROVIDER ENGINE W/ MOBILE DEEP LINK PROTECTION
   const handleConnectWallet = async (connector: any) => {
     if (!connector) return;
     const cName = connector.name ? connector.name.toLowerCase() : "";
@@ -173,7 +173,7 @@ function MainApp() {
       }
       connect({ connector });
     } catch (err: any) {
-      alert("Gagal memicu operasi koneksi wallet: " + err.message);
+      alert("Failed to prompt provider bridge orchestration: " + err.message);
     }
   };
 
@@ -198,7 +198,7 @@ function MainApp() {
   const handleSetPrice = (e: React.FormEvent) => {
     e.preventDefault();
     if (!parsedAbi || !currentContractAddress) {
-      alert("❌ Gagal: ABI Kontrak atau Alamat Kontrak Pintar belum dimuat di Panel Manajemen.");
+      alert("❌ Failed: Contract ABI or Smart Contract Address has not been loaded in the Management Panel.");
       return;
     }
     writeContract({
@@ -211,7 +211,7 @@ function MainApp() {
 
   const handleWithdrawFunds = () => {
     if (!parsedAbi || !currentContractAddress) {
-      alert("❌ Gagal: Sinkronisasi data kontrak pintar tidak terdeteksi.");
+      alert("❌ Failed: Smart contract data synchronization not detected.");
       return;
     }
     writeContract({
@@ -228,7 +228,7 @@ function MainApp() {
     }
 
     if (!parsedAbi || !currentContractAddress) {
-      alert(`❌ EKSEKUSI WEB3 DIBLOKIR!\n\nDetail Kerusakan Sistem:\n- ABI Kontrak Data: ${parsedAbi ? "🟢 OK (Terbaca)" : "🔴 ERROR (Kosong/Gagal Load)"}\n- Alamat Kontrak Pintar: ${currentContractAddress ? "🟢 OK (Terbaca)" : "🔴 ERROR (Kosong/Undefined)"}`);
+      alert(`❌ WEB3 EXECUTION BLOCKED!\n\nSystem Error Details:\n- Data Contract ABI: ${parsedAbi ? "🟢 OK (Loaded)" : "🔴 ERROR (Empty/Failed Load)"}\n- Smart Contract Address: ${currentContractAddress ? "🟢 OK (Loaded)" : "🔴 ERROR (Empty/Undefined)"}`);
       return;
     }
 
@@ -264,13 +264,13 @@ function MainApp() {
     }
 
     if (!targetDeliveryAddress.startsWith("0x") || targetDeliveryAddress.length !== 42) {
-      alert("❌ Alamat Wallet ERC-20 tidak valid!");
+      alert("❌ Invalid ERC-20 Wallet Address!");
       setShowQrisModal(false);
       return;
     }
 
     if (!parsedAbi || !currentContractAddress) {
-      alert("Peringatan: Konfigurasi ABI kontrak pintar belum siap dimuat di latar belakang!");
+      alert("Warning: Smart contract ABI configuration is not ready to load in the background!");
       setShowQrisModal(false); 
       return;
     }
@@ -307,11 +307,11 @@ function MainApp() {
     if (onboardingStrategy === "STRATEGY_2") {
       let checkAddr = fiatDeliveryAddress.trim() || (address ? String(address) : "");
       if (!checkAddr.startsWith("0x") || checkAddr.length !== 42) {
-        alert("❌ Mohon isi Alamat Wallet Penerima NFT dengan benar!");
+        alert("❌ Please fill in the NFT Recipient Wallet Address correctly!");
         return;
       }
     } else if (onboardingStrategy === "STRATEGY_1" && !userEmailSimulation.includes("@")) {
-      alert("❌ Mohon masukkan alamat Email pembeli yang valid!");
+      alert("❌ Please enter a valid buyer Email address!");
       return;
     }
 
@@ -374,7 +374,7 @@ function MainApp() {
         </div>
       </div>
 
-      {/* FLOATING OVERLAY MODAL */}
+      {/* FLOATING OVERLAY PROVIDER SELECTION MODAL */}
       {isWalletModalOpen && !isConnected && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100000 }}>
           <div style={{ backgroundColor: "#ffffff", padding: "35px", borderRadius: "20px", width: "100%", maxWidth: "340px", textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
@@ -387,7 +387,6 @@ function MainApp() {
                 let displayWalletName = connector.name || "Injected Node";
                 if (displayWalletName.toLowerCase() === "injected") displayWalletName = "Browser Default Extension";
                 return (
-                  /* ✅ KODE PERBAIKAN: justifyContext diganti ke justifyContent */
                   <button key={connector.uid} onClick={() => { handleConnectWallet(connector); setIsWalletModalOpen(false); }} style={{ background: "#f9fafb", color: "#111827", border: "1px solid #e5e7eb", padding: "14px", borderRadius: "12px", cursor: "pointer", fontWeight: 700, fontSize: "14px", textAlign: "left", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <span>🚀 {displayWalletName}</span>
                     <span style={{ fontSize: "11px", color: "#2563eb", background: "#eff6ff", padding: "2px 6px", borderRadius: "4px", fontWeight: 600 }}>Launch</span>
@@ -399,34 +398,38 @@ function MainApp() {
         </div>
       )}
 
-      {/* DYNAMIC POP-UP MODAL QRIS INDONESIA */}
+      {/* ✅ CIAMIK DYNAMIC POP-UP MODAL QRIS INDONESIA */}
       {showQrisModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 99999 }}>
           <div style={{ backgroundColor: "#ffffff", padding: "35px", borderRadius: "20px", width: "100%", maxWidth: "380px", textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
-              <span style={{ fontWeight: 700, color: "#e04f1a", fontSize: "15px", letterSpacing: "0.03em" }}>GPN / QRIS STANDAR NASIONAL</span>
+              <h3 style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "center", color: "#e04f1a", margin: 0, fontSize: "16px" }}>
+                💾 GPN / QRIS STANDAR NASIONAL
+              </h3>
               <button type="button" onClick={() => setShowQrisModal(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#9ca3af" }}>✕</button>
             </div>
             <div style={{ background: "#ffffff", padding: "16px", borderRadius: "14px", display: "inline-block", border: "1px solid #e5e7eb" }}>
-              <img src={dynamicQrisUrl || fallbackQrisUrl} alt="QRIS Core Engine" width="190" height="190" />
+              <img src={dynamicQrisUrl || fallbackQrisUrl} width="190" alt="QRIS" />
             </div>
             <div style={{ marginTop: "12px" }}>
-              <button type="button" onClick={downloadQris} style={{ background: "#f3f4f6", color: "#111827", border: "1px solid #e5e7eb", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "12px" }}>💾 Unduh Kode QRIS</button>
+              <button type="button" onClick={downloadQris} style={{ background: "#f3f4f6", color: "#111827", border: "1px solid #e5e7eb", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "12px" }}>💾 Download QRIS Code</button>
             </div>
             <div style={{ background: "#fef3c7", color: "#92400e", padding: "12px", borderRadius: "10px", fontSize: "12px", margin: "15px 0", textAlign: "left", wordBreak: "break-all" }}>
-              <strong>📍 Target Pengiriman NFT:</strong><br />
+              <strong>📍 NFT Delivery Target:</strong><br />
               <code style={{ fontSize: "11px", fontWeight: 700 }}>
                 {onboardingStrategy === "STRATEGY_2" && (fiatDeliveryAddress || "0x95222... Fallback")}
                 {onboardingStrategy === "STRATEGY_1" && `📧 ${userEmailSimulation} (Auto Embedded Wallet)`}
               </code>
             </div>
-            <div style={{ background: "#fef3c7", color: "#92400e", padding: "12px", borderRadius: "10px", fontSize: "14px", fontWeight: 700, marginBottom: "20px" }}>Total Tagihan: {convertedFiatPrice}</div>
-            <button type="button" onClick={executeOnChainRelayMint} style={{ width: "100%", background: "#10b981", color: "#ffffff", border: "none", padding: "14px", borderRadius: "10px", cursor: "pointer", fontWeight: 600, fontSize: "14px" }}>Konfirmasi Pembayaran Sukses (Simulasi)</button>
+            <div style={{ margin: "20px 0", fontWeight: 700, color: "#92400e", background: "#fef3c7", padding: "12px", borderRadius: "10px", fontSize: "14px" }}>Total: {convertedFiatPrice}</div>
+            <button type="button" onClick={executeOnChainRelayMint} style={{ width: "100%", background: "#10b981", color: "white", padding: "12px", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "14px" }}>
+              Konfirmasi Pembayaran
+            </button>
           </div>
         </div>
       )}
 
-      {/* SYSTEM BROADCAST MONITOR */}
+      {/* SYSTEM BROADCAST NETWORK STATE MONITOR */}
       {(isTxPending || txHash || txError || connectError || fiatPaymentStatus === "PROCESSING") && (
         <div style={{ background: "#ffffff", padding: "20px", borderRadius: "12px", marginBottom: "35px", border: "1px solid #e5e7eb" }}>
           <h4 style={{ marginTop: 0, marginBottom: "8px", fontWeight: 700, fontSize: "14px", textTransform: "uppercase", color: "#4b5563" }}>⚡ System Broadcast Monitor:</h4>
@@ -447,7 +450,6 @@ function MainApp() {
             const priceUsd = (Number(priceEth) * ETH_TO_USD_RATE).toFixed(0);
             const cardTheme = cardThemes[prod.id] || { bg: "#ffffff", border: "#e5e7eb" };
             return (
-              /* ✅ KODE PERBAIKAN: justifyContent sudah dipastikan benar */
               <div key={prod.id} style={{ background: cardTheme.bg, border: `1px solid ${cardTheme.border}`, borderRadius: "16px", padding: "26px", display: "flex", flexDirection: "column", justifyContent: "space-between", boxSizing: "border-box" }}>
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -499,14 +501,24 @@ function MainApp() {
           </div>
         </div>
 
-        {/* 💳 HYBRID INTERNATIONAL FIAT SETTLEMENT ENGINE */}
+        {/* ✅ INTEGRATED ENGINE CARD DESIGN */}
         <div style={{ background: "#fff7ed", padding: "25px", borderRadius: "14px", border: "1px solid #f97316", flex: "1", minWidth: "300px" }}>
-          <h3 style={{ marginTop: 0, color: "#c2410c", fontSize: "17px", fontWeight: 700 }}>💳 Hybrid International Fiat Settlement Engine</h3>
-          <p style={{ fontSize: "13px", color: "#ea580c", marginTop: "-4px" }}>Simulates Stripe Credit Card (USD) or localized QRIS (IDR) triggering automated relay mints.</p>
-          
-          <form onSubmit={handleFiatSimulationSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "15px" }}>
+          <form onSubmit={handleFiatSimulationSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <h3>💳 Hybrid Settlement Engine</h3>
             
-            {/* PANEL PILIHAN STRATEGI */}
+            {/* ✅ INTEGRATED RADIO METRICS SNIPPET */}
+            <div style={{ display: "flex", gap: "16px", marginBottom: "15px" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                <input type="radio" name="currency" value="USD" checked={selectedCurrency === "USD"} onChange={() => setSelectedCurrency("USD")} />
+                <span>💳 Credit Card</span>
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                <input type="radio" name="currency" value="IDR" checked={selectedCurrency === "IDR"} onChange={() => setSelectedCurrency("IDR")} />
+                <span>💾 QRIS Payment</span>
+              </label>
+            </div>
+
+            {/* ROADMAP PREVIEW MODE PANEL SELECTOR */}
             <div style={{ background: "#ffffff", padding: "14px", borderRadius: "10px", border: "1px solid #fdba74" }}>
               <label style={{ display: "block", fontSize: "11px", fontWeight: 800, color: "#c2410c", marginBottom: "8px", textTransform: "uppercase" }}>
                 🗺️ Web3 Onboarding Delivery Strategy (Roadmap Option):
@@ -516,26 +528,26 @@ function MainApp() {
                 <label style={{ fontSize: "12px", display: "flex", alignItems: "start", gap: "6px", cursor: "pointer", color: "#111827" }}>
                   <input type="radio" name="strategy" value="STRATEGY_2" checked={onboardingStrategy === "STRATEGY_2"} onChange={() => setOnboardingStrategy("STRATEGY_2")} />
                   <div>
-                    <strong>Strategy 2: Form Input Alamat Manual (Aktif)</strong>
-                    <div style={{ fontSize: "11px", color: "#6b7280" }}>Pembeli menempelkan alamat dompet kripto mereka sendiri.</div>
+                    <strong>Strategy 2: Manual Wallet Address Form Input (Active)</strong>
+                    <div style={{ fontSize: "11px", color: "#6b7280" }}>Buyers paste their own crypto wallet address.</div>
                   </div>
                 </label>
 
                 <label style={{ fontSize: "12px", display: "flex", alignItems: "start", gap: "6px", cursor: "pointer", color: "#111827" }}>
                   <input type="radio" name="strategy" value="STRATEGY_1" checked={onboardingStrategy === "STRATEGY_1"} onChange={() => setOnboardingStrategy("STRATEGY_1")} />
                   <div>
-                    <strong>Strategy 1: Auto Email Embedded Wallet (Simulasi Roadmap)</strong>
-                    <div style={{ fontSize: "11px", color: "#10b981", fontWeight: 500 }}>Paling Bagus Untuk Jualan Massal Awam via Privy/Web3Auth.</div>
+                    <strong>Strategy 1: Auto Email Embedded Wallet (Roadmap Simulation)</strong>
+                    <div style={{ fontSize: "11px", color: "#10b981", fontWeight: 500 }}>Best for Mass Retail Onboarding via Privy/Web3Auth.</div>
                   </div>
                 </label>
               </div>
             </div>
 
-            {/* DYNAMIC CONTEXTUAL EN-INPUT FORM */}
+            {/* DYNAMIC FORM SEGMENTS */}
             {onboardingStrategy === "STRATEGY_2" && (
               <div style={{ background: "#ffffff", padding: "12px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-                <label style={{ display: "block", fontSize: "11px", fontWeight: 700, marginBottom: "4px", color: "#111827" }}>📍 MASUKKAN ALAMAT WALLET ERC-20 PENERIMA NFT:</label>
-                <input type="text" placeholder="Masukkan 0x..." value={fiatDeliveryAddress} onChange={(e) => setFiatDeliveryAddress(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827", fontFamily: "monospace" }} required />
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 700, marginBottom: "4px", color: "#111827" }}>📍 ENTER ERC-20 RECIPIENT WALLET ADDRESS FOR NFT:</label>
+                <input type="text" placeholder="Enter 0x..." value={fiatDeliveryAddress} onChange={(e) => setFiatDeliveryAddress(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827", fontFamily: "monospace" }} required />
                 <span style={{ fontSize: "10px", color: "#6b7280", marginTop: "4px", display: "block" }}>
                   *NFTs minted via the fiat/QRIS route will be instantly routed to the hex address specified above.
                 </span>
@@ -544,66 +556,53 @@ function MainApp() {
 
             {onboardingStrategy === "STRATEGY_1" && (
               <div style={{ background: "rgba(16, 185, 129, 0.05)", padding: "12px", borderRadius: "8px", border: "1px solid #a7f3d0" }}>
-                <label style={{ display: "block", fontSize: "11px", fontWeight: 700, marginBottom: "4px", color: "#065f46" }}>📧 EMAIL PEMBELI AWAM (AUTO GENERATE WALLET):</label>
-                <input type="email" placeholder="contoh: pembeliyangmauqris@gmail.com" value={userEmailSimulation} onChange={(e) => setUserEmailSimulation(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #a7f3d0", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} required />
-                <span style={{ fontSize: "10px", color: "#047857", marginTop: "4px", display: "block" }}>*Sistem backend otomatis menyulap email di atas menjadi dompet Web3 tersertifikasi Privy!</span>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 700, marginBottom: "4px", color: "#065f46" }}>📧 RETAIL BUYER EMAIL (AUTO GENERATE WALLET):</label>
+                <input type="email" placeholder="example: retailbuyer@gmail.com" value={userEmailSimulation} onChange={(e) => setUserEmailSimulation(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #a7f3d0", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} required />
+                <span style={{ fontSize: "10px", color: "#047857", marginTop: "4px", display: "block" }}>*Backend system automatically converts the above email into a Privy-certified Web3 wallet!</span>
               </div>
             )}
 
-            <div>
-              <label style={{ display: "block", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", marginBottom: "6px", color: "#4b5563" }}>3. Choose Target Currency Option:</label>
-              <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                <label style={{ fontSize: "13px", fontWeight: 600, cursor: "pointer", color: "#111827" }}>
-                  <input type="radio" name="currency" value="USD" checked={selectedCurrency === "USD"} onChange={() => setSelectedCurrency("USD")} style={{ marginRight: "6px" }} />🇺🇸 USD Card
-                </label>
-                <label style={{ fontSize: "13px", fontWeight: 600, cursor: "pointer", color: "#111827" }}>
-                  <input type="radio" name="currency" value="IDR" checked={selectedCurrency === "IDR"} onChange={() => setSelectedCurrency("IDR")} style={{ marginRight: "6px" }} />🇮🇩 IDR QRIS
-                </label>
-              </div>
-            </div>
-
+            {/* MASKING ENGINE INCORPORATED ACCORDING TO SPECS */}
             {selectedCurrency === "IDR" ? (
-              <div style={{ marginTop: "4px", padding: "12px", backgroundColor: "#ffffff", borderRadius: "8px", border: "1px solid #fed7aa", fontSize: "12px", color: "#c2410c", fontWeight: 600 }}>🎯 QRIS Core Active. Kode QR dinamis siap meluncur.</div>
+              <div style={{ marginTop: "4px", padding: "12px", backgroundColor: "#ffffff", borderRadius: "8px", border: "1px solid #fed7aa", fontSize: "12px", color: "#c2410c", fontWeight: 600 }}>🎯 QRIS Core Active. Dynamic QR code ready to deploy.</div>
             ) : (
               <div style={{ marginTop: "4px", backgroundColor: "#ffffff", padding: "14px", borderRadius: "8px", border: "1px solid #fed7aa" }}>
-  <input 
-    type="text" 
-    placeholder="0000 0000 0000 0000" 
-    maxLength={19} 
-    onChange={(e) => {
-      // Auto format: 4-4-4-4
-      let value = e.target.value.replace(/\D/g, "");
-      value = value.replace(/(.{4})/g, "$1 ").trim();
-      e.target.value = value;
-    }}
-    style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", marginBottom: "8px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827", fontFamily: "monospace" }} 
-    required 
-  />
-  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-    <input 
-      type="text" 
-      placeholder="MM / YYYY" 
-      maxLength={9} 
-      onChange={(e) => {
-        // Auto format: MM / YYYY
-        let value = e.target.value.replace(/\D/g, "");
-        if (value.length > 2) {
-          value = value.slice(0, 2) + " / " + value.slice(2, 6);
-        }
-        e.target.value = value;
-      }}
-      style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} 
-      required 
-    />
-    <input 
-      type="password" 
-      placeholder="CVC" 
-      maxLength={3} 
-      style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} 
-      required 
-    />
-  </div>
-</div>
+                <input 
+                  type="text" 
+                  placeholder="0000 0000 0000 0000" 
+                  maxLength={19} 
+                  onChange={(e) => {
+                    let value = e.target.value.replace(/\D/g, "");
+                    value = value.replace(/(.{4})/g, "$1 ").trim();
+                    e.target.value = value;
+                  }}
+                  style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", marginBottom: "8px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827", fontFamily: "monospace" }} 
+                  required 
+                />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                  <input 
+                    type="text" 
+                    placeholder="MM / YYYY" 
+                    maxLength={9} 
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/\D/g, "");
+                      if (value.length > 2) {
+                        value = value.slice(0, 2) + " / " + value.slice(2, 6);
+                      }
+                      e.target.value = value;
+                    }}
+                    style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} 
+                    required 
+                  />
+                  <input 
+                    type="password" 
+                    placeholder="CVC" 
+                    maxLength={3} 
+                    style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} 
+                    required 
+                  />
+                </div>
+              </div>
             )}
 
             <div>
@@ -620,7 +619,7 @@ function MainApp() {
             </div>
 
             <button type="submit" disabled={fiatPaymentStatus === "PROCESSING" || isFetchingQris} style={{ width: "100%", background: "#f97316", color: "white", border: "none", padding: "12px", borderRadius: "8px", cursor: "pointer", fontWeight: 700, fontSize: "13px" }}>
-              {isFetchingQris ? "Membuka Gerbang API..." : `Simulate Checkout via ${selectedCurrency}`}
+              {isFetchingQris ? "Opening API Gateway..." : `Simulate Checkout via ${selectedCurrency}`}
             </button>
           </form>
         </div>
