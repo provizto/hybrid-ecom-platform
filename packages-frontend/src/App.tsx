@@ -33,6 +33,9 @@ function MainApp() {
   const [fiatProductId, setFiatProductId] = useState<string>("3");
   const [fiatPaymentStatus, setFiatPaymentStatus] = useState<string>("IDLE");
   const [selectedCurrency, setSelectedCurrency] = useState<string>("USD"); 
+  
+  // 🚀 STATE BARU: Menampung input alamat manual tujuan pengiriman NFT via Fiat
+  const [fiatDeliveryAddress, setFiatDeliveryAddress] = useState<string>("");
 
   const [dbLogs, setDbLogs] = useState<DbLog[]>([]);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState<boolean>(false);
@@ -66,6 +69,15 @@ function MainApp() {
     if (finalAbi) setParsedAbi(finalAbi);
   }, []);
 
+  // 🔄 AUTO FILL ALAMAT: Jika user menghubungkan wallet, otomatis isikan ke form input fiat demi kenyamanan user
+  useEffect(() => {
+    if (isConnected && address) {
+      setFiatDeliveryAddress(String(address));
+    } else {
+      setFiatDeliveryAddress("");
+    }
+  }, [isConnected, address]);
+
   const { data: storeName } = useReadContract({
     address: currentContractAddress,
     abi: parsedAbi || [],
@@ -90,7 +102,6 @@ function MainApp() {
           setDbLogs((prev) => {
             const isExist = prev.some((l) => l.txHash === log.transactionHash);
             if (isExist) {
-              // Jika data log instan sudah ada, update nomor Token ID aslinya saja dari blockchain
               return prev.map((l) => 
                 l.txHash === log.transactionHash || l.tokenId === "Minting..." || l.tokenId === "Relay-Mint"
                   ? { ...l, tokenId: `#${tokenNum}` }
@@ -145,7 +156,6 @@ function MainApp() {
         return;
       }
 
-      // 🔥 AUTO DEEP-LINK REDIRECT JIKA DIBUKA DI CHROME/SAFARI HP BIASA
       if (isMobile) {
         const cleanUrl = window.location.href.replace(/^https?:\/\//, "");
 
@@ -221,7 +231,7 @@ function MainApp() {
     }
 
     if (!parsedAbi || !currentContractAddress) {
-      alert(`❌ EKSEKUSI WEB3 DIBLOKIR!\n\nDetail Kerusakan Sistem:\n- ABI Kontrak Data: ${parsedAbi ? "🟢 OK (Terbaca)" : "🔴 ERROR (Kosong/Gagal Load)"}\n- Alamat Kontrak Pintar: ${currentContractAddress ? "🟢 OK (Terbaca)" : "🔴 ERROR (Kosong/Undefined)"}\n\nSolusi Bosku:\nPeriksa file .env lokal Anda atau masukkan 'VITE_CONTRACT_ADDRESS' di dashboard Environment Variables Vercel lalu redeploy!`);
+      alert(`❌ EKSEKUSI WEB3 DIBLOKIR!\n\nDetail Kerusakan Sistem:\n- ABI Kontrak Data: ${parsedAbi ? "🟢 OK (Terbaca)" : "🔴 ERROR (Kosong/Gagal Load)"}\n- Alamat Kontrak Pintar: ${currentContractAddress ? "🟢 OK (Terbaca)" : "🔴 ERROR (Kosong/Undefined)"}`);
       return;
     }
 
@@ -235,7 +245,6 @@ function MainApp() {
       value: parseEther(String(priceEth)),
     });
 
-    // 🌟 BYPASS INSTAN: Langsung suntik baris data riwayat ke kotak log monitor lokal
     const newLog: DbLog = {
       buyer: String(address),
       tokenId: "Minting...", 
@@ -247,9 +256,16 @@ function MainApp() {
     setDbLogs((prev) => [newLog, ...prev]);
   };
 
-  // 🔥 UPDATE INTEGRASI SIMULASI FIAT RELAY MINT + INSTANT LOCAL INJECTION MONITOR LOGS
+  // 🔥 UPDATE INTEGRASI SIMULASI FIAT RELAY MINT + MANUAL ADDRESS VERIFICATION
   const executeOnChainRelayMint = () => {
-    let targetDeliveryAddress = address ? address : "0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5";
+    // 🛡️ STRATEGI BARU: Validasi alamat input manual. Jika kosong, baru cek wallet address, jika masih kosong gunakan fallback aman.
+    let targetDeliveryAddress = fiatDeliveryAddress.trim() || (address ? String(address) : "0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5");
+
+    if (!targetDeliveryAddress.startsWith("0x") || targetDeliveryAddress.length !== 42) {
+      alert("❌ Alamat Wallet ERC-20 yang Anda masukkan tidak valid! Pastikan berformat Hex (0x...) dengan panjang 42 karakter.");
+      setShowQrisModal(false);
+      return;
+    }
 
     if (!parsedAbi || !currentContractAddress) {
       alert("Peringatan: Konfigurasi ABI kontrak pintar belum siap dimuat di latar belakang!");
@@ -271,9 +287,8 @@ function MainApp() {
         args: [targetDeliveryAddress as `0x${string}`, dummyAwsTokenUri, BigInt(fiatProductId)],
       });
 
-      // 🌟 BYPASS INSTAN: Suntik data dengan keterangan rute Fiat riil (Stripe/QRIS)
       const newLog: DbLog = {
-        buyer: String(targetDeliveryAddress),
+        buyer: targetDeliveryAddress,
         tokenId: "Relay-Mint",
         productId: String(fiatProductId),
         timestamp: new Date().toLocaleTimeString(),
@@ -286,6 +301,12 @@ function MainApp() {
 
   const handleFiatSimulationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    let checkAddr = fiatDeliveryAddress.trim() || (address ? String(address) : "");
+    if (!checkAddr.startsWith("0x") || checkAddr.length !== 42) {
+      alert("❌ Mohon isi Alamat Wallet Penerima NFT dengan benar sebelum melanjutkan checkout!");
+      return;
+    }
 
     const selectedProductData = (WHITELABEL_PRODUCTS || []).find(p => p.id === Number(fiatProductId));
     const productPriceEth = selectedProductData ? Number(selectedProductData.defaultPriceEth) : 0.05;
@@ -307,13 +328,11 @@ function MainApp() {
         
         if (data && data.success && data.qrUrl) {
           setDynamicQrisUrl(data.qrUrl); 
-          console.log("🎯 Sukses! QRIS Midtrans Berhasil Masuk:", data.qrUrl);
         } else {
           setDynamicQrisUrl(fallbackQrisUrl);
           alert("❌ Vercel Serverless merespon tapi Midtrans menolak!\nPesan: " + JSON.stringify(data));
         }
       } catch (err: any) {
-        console.warn("Koneksi tersumbat sebelum sampai ke API Vercel...", err);
         setDynamicQrisUrl(fallbackQrisUrl);
         alert("⚠️ KONEKSI VERCEL API GAGAL!\nDetail: " + err.message);
       } finally {
@@ -441,7 +460,12 @@ function MainApp() {
               </button>
             </div>
 
-            <div style={{ background: "#fef3c7", color: "#92400e", padding: "12px", borderRadius: "10px", fontSize: "14px", fontWeight: 700, margin: "20px 0" }}>
+            <div style={{ background: "#fef3c7", color: "#92400e", padding: "12px", borderRadius: "10px", fontSize: "13px", fontWeight: 500, margin: "15px 0", textAlign: "left", wordBreak: "break-all" }}>
+              <strong>📍 Kirim NFT ke Alamat:</strong><br />
+              <code style={{ fontSize: "11px", fontWeight: 700 }}>{fiatDeliveryAddress.trim() || walletAddressStr || "0x952222... (Fallback)"}</code>
+            </div>
+
+            <div style={{ background: "#fef3c7", color: "#92400e", padding: "12px", borderRadius: "10px", fontSize: "14px", fontWeight: 700, marginBottom: "20px" }}>
               Total Tagihan: {convertedFiatPrice}
             </div>
 
@@ -452,7 +476,7 @@ function MainApp() {
         </div>
       )}
 
-      {/* TRANSACTIONS BROADCAST MONITOR */}
+      {/* SYSTEM BROADCAST MONITOR */}
       {(isTxPending || txHash || txError || connectError || fiatPaymentStatus === "PROCESSING") && (
         <div style={{ background: "#ffffff", padding: "20px", borderRadius: "12px", marginBottom: "35px", border: "1px solid #e5e7eb" }}>
           <h4 style={{ marginTop: 0, marginBottom: "8px", fontWeight: 700, fontSize: "14px", textTransform: "uppercase", color: "#4b5563" }}>⚡ System Broadcast Monitor:</h4>
@@ -499,7 +523,6 @@ function MainApp() {
                 }}
               >
                 <div>
-                  {/* SKU ID Badge */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ background: "#ffffff", color: "#1f2937", padding: "5px 12px", borderRadius: "8px", fontSize: "11px", fontWeight: 700, border: `1px solid ${cardTheme.border}` }}>
                       SKU-0{prod.id}
@@ -519,7 +542,6 @@ function MainApp() {
                 </div>
 
                 <div>
-                  {/* 🛡️ GUARD INTEGRITAS DATA BLOCKCHAIN */}
                   <div style={{ 
                     background: isConnected ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.06)", 
                     border: `1px solid ${isConnected ? "#a7f3d0" : "#fca5a5"}`, 
@@ -546,7 +568,6 @@ function MainApp() {
                     </div>
                   </div>
 
-                  {/* Elegant Dynamic Pricing Grid */}
                   <div style={{ borderTop: `1px solid ${cardTheme.border}`, paddingTop: "16px", marginBottom: "18px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "4px" }}>
                       <span style={{ fontSize: "20px", fontWeight: 800, color: "#111827" }}>{priceEth} ETH</span>
@@ -557,7 +578,6 @@ function MainApp() {
                     </div>
                   </div>
 
-                  {/* 🎮 BUTTON REAKTIF DEEP LINK WALLET */}
                   <button
                     type="button"
                     disabled={isTxPending}
@@ -597,7 +617,7 @@ function MainApp() {
           <h3 style={{ marginTop: 0, color: "#1d4ed8", fontSize: "17px", fontWeight: 700 }}>📊 Global Database Order Logs</h3>
           <p style={{ fontSize: "13px", color: "#2563eb", marginTop: "-4px" }}>Unified dashboard recording incoming cross-border settlement event emissions.</p>
           
-          <div style={{ maxHeight: "280px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px", marginTop: "15px" }}>
+          <div style={{ maxHeight: "350px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px", marginTop: "15px" }}>
             {dbLogs.length === 0 ? (
               <div style={{ background: "#ffffff", padding: "20px", borderRadius: "8px", textAlign: "center", color: "#9ca3af", border: "1px dashed #bfdbfe", fontSize: "13px" }}>
                 📭 No dynamic billing data synchronized yet.
@@ -624,8 +644,37 @@ function MainApp() {
           <p style={{ fontSize: "13px", color: "#ea580c", marginTop: "-4px" }}>Simulates Stripe Credit Card (USD) or localized QRIS (IDR) triggering automated relay mints.</p>
           
           <form onSubmit={handleFiatSimulationSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "15px" }}>
+            
+            {/* 🔥 MODUL TAMBAHAN STRATEGI 2: FORM ALAMAT WALLET PENERIMA NFT ERC-20 */}
+            <div style={{ background: "#ffffff", padding: "14px", borderRadius: "10px", border: "1px solid #fed7aa" }}>
+              <label style={{ display: "block", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: "6px", color: "#111827" }}>
+                🚀 1. ALAMAT WALLET PENERIMA NFT (ERC-20):
+              </label>
+              <input 
+                type="text" 
+                placeholder="Masukkan alamat dompet tujuan 0x..." 
+                value={fiatDeliveryAddress}
+                onChange={(e) => setFiatDeliveryAddress(e.target.value)}
+                style={{ 
+                  width: "100%", 
+                  padding: "10px", 
+                  borderRadius: "6px", 
+                  border: "1px solid #d1d5db", 
+                  fontSize: "12px", 
+                  boxSizing: "border-box", 
+                  backgroundColor: "#f9fafb", 
+                  color: "#111827",
+                  fontFamily: "monospace" 
+                }} 
+                required 
+              />
+              <span style={{ fontSize: "10px", color: "#6b7280", marginTop: "4px", display: "block" }}>
+                *NFT hasil cetak via jalur fiat/QRIS akan langsung ditembak menuju alamat hex di atas.
+              </span>
+            </div>
+
             <div>
-              <label style={{ display: "block", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", marginBottom: "6px", color: "#4b5563" }}>1. Choose Target Currency Option:</label>
+              <label style={{ display: "block", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", marginBottom: "6px", color: "#4b5563" }}>2. Choose Target Currency Option:</label>
               <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
                 <label style={{ fontSize: "13px", fontWeight: 600, cursor: "pointer", color: "#111827" }}>
                   <input type="radio" name="currency" value="USD" checked={selectedCurrency === "USD"} onChange={() => setSelectedCurrency("USD")} style={{ marginRight: "6px" }} />
@@ -654,7 +703,7 @@ function MainApp() {
             )}
 
             <div>
-              <label style={{ display: "block", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: "4px", color: "#4b5563" }}>3. Select Solutions Product:</label>
+              <label style={{ display: "block", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: "4px", color: "#4b5563" }}>4. Select Solutions Product:</label>
               <select value={fiatProductId} onChange={(e) => setFiatProductId(e.target.value)} style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }}>
                 {(WHITELABEL_PRODUCTS || []).map((p: Product) => (
                   <option key={p.id} value={p.id} style={{ backgroundColor: "#ffffff", color: "#111827" }}>{p.name}</option>
@@ -674,7 +723,7 @@ function MainApp() {
 
       </div>
 
-      {/* 🔐 HANYA TAMPIL JIKA WALLET YANG TERHUBUNG ADALAH WALLET OWNER RAHASIA */}
+      {/* HANYA TAMPIL JIKA WALLET YANG TERHUBUNG ADALAH WALLET OWNER RAHASIA */}
       {isConnected && address?.toLowerCase() === "0xc7ac22cbe2c96c308dafbec609025c03a713fe01" && (
         <div style={{ background: "#fdf4ff", padding: "25px", borderRadius: "14px", border: "1px solid #d946ef", marginTop: "30px" }}>
           <h3 style={{ marginTop: 0, color: "#a21caf", fontSize: "16px", fontWeight: 700 }}>🛠️ Internal Management Panel (Operator Only)</h3>
