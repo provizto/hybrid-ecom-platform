@@ -178,7 +178,7 @@ function MainApp() {
           return;
         }
         if (cName.includes("phantom") || cId.includes("phantom")) {
-          window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(window.location.href)}`;
+          window.location.href = `https://phantom.app/ul/browse/${cleanUrl}`;
           return;
         }
         if (cName.includes("backpack") || cId.includes("backpack")) {
