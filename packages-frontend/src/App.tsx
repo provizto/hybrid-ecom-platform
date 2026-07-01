@@ -153,7 +153,7 @@ function MainApp() {
     }
   };
 
-  // 🛠️ LOGIKA 1: Fungsi Operator mengubah harga produk on-chain
+  // 🛠️ LOGIKA OPERATOR 1: setProductPrice
   const handleSetPrice = (e: React.FormEvent) => {
     e.preventDefault();
     if (!parsedAbi || !currentContractAddress) {
@@ -168,7 +168,7 @@ function MainApp() {
     });
   };
 
-  // 🛠️ LOGIKA 2: Fungsi Operator melakukan penarikan dana darurat kontrak pintar
+  // 🛠️ LOGIKA OPERATOR 2: withdrawFunds
   const handleWithdrawFunds = () => {
     if (!parsedAbi || !currentContractAddress) {
       alert("❌ Gagal: Sinkronisasi data kontrak pintar tidak terdeteksi.");
@@ -619,51 +619,52 @@ function MainApp() {
 
       </div>
 
-      {/* INTERNAL MANAGEMENT CONTROL */}
-      <div style={{ background: "#fdf4ff", padding: "25px", borderRadius: "14px", border: "1px solid #d946ef" }}>
-        <h3 style={{ marginTop: 0, color: "#a21caf", fontSize: "16px", fontWeight: 700 }}>🛠️ Internal Management Panel (Operator Only)</h3>
-        
-        {/* 🌟 PENYATUAN FORM DAN TOMBOL WITHDRAW EMERGENSI */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          <form onSubmit={handleSetPrice} style={{ display: "flex", flexWrap: "wrap", gap: "15px", alignItems: "end", width: "100%" }}>
-            <div style={{ flex: "1", minWidth: "150px" }}>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, marginBottom: "6px", color: "#4b5563" }}>Product Target ID:</label>
-              <input type="number" value={adminProductId} onChange={(e) => setAdminProductId(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} required />
-            </div>
-            <div style={{ flex: "1", minWidth: "150px" }}>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, marginBottom: "6px", color: "#4b5563" }}>New Ledger Rate (ETH):</label>
-              <input type="text" value={adminPrice} onChange={(e) => setAdminPrice(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} required />
-            </div>
-            <button type="submit" disabled={!isConnected || isTxPending} style={{ background: "#d946ef", color: "white", border: "none", padding: "11px 22px", borderRadius: "6px", cursor: "pointer", fontWeight: 600 }}>
-              {isTxPending ? "⏳ Broadcasting Rate..." : "Override Price Rate"}
-            </button>
-          </form>
+      {/* 🔐 SINKRONISASI LOGIKA: HANYA DIRENDER DI LAYAR BROWSER BILA DOMPET OWNER YANG TERHUBUNG */}
+      {isConnected && address?.toLowerCase() === "0xc7ac22cbe2c96c308dafbec609025c03a713fe01" && (
+        <div style={{ background: "#fdf4ff", padding: "25px", borderRadius: "14px", border: "1px solid #d946ef", marginTop: "30px" }}>
+          <h3 style={{ marginTop: 0, color: "#a21caf", fontSize: "16px", fontWeight: 700 }}>🛠️ Internal Management Panel (Operator Only)</h3>
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <form onSubmit={handleSetPrice} style={{ display: "flex", flexWrap: "wrap", gap: "15px", alignItems: "end", width: "100%" }}>
+              <div style={{ flex: "1", minWidth: "150px" }}>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, marginBottom: "6px", color: "#4b5563" }}>Product Target ID:</label>
+                <input type="number" value={adminProductId} onChange={(e) => setAdminProductId(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} required />
+              </div>
+              <div style={{ flex: "1", minWidth: "150px" }}>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, marginBottom: "6px", color: "#4b5563" }}>New Ledger Rate (ETH):</label>
+                <input type="text" value={adminPrice} onChange={(e) => setAdminPrice(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "1px solid #d1d5db", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} required />
+              </div>
+              <button type="submit" disabled={!isConnected || isTxPending} style={{ background: "#d946ef", color: "white", border: "none", padding: "11px 22px", borderRadius: "6px", cursor: "pointer", fontWeight: 600 }}>
+                {isTxPending ? "⏳ Broadcasting Rate..." : "Override Price Rate"}
+              </button>
+            </form>
 
-          <div style={{ borderTop: "1px dashed #d946ef", paddingTop: "15px" }}>
-            <button 
-              type="button" 
-              disabled={!isConnected || isTxPending} 
-              onClick={handleWithdrawFunds}
-              style={{ 
-                background: "#6b21a8", 
-                color: "white", 
-                border: "none", 
-                padding: "12px 24px", 
-                borderRadius: "6px", 
-                cursor: "pointer", 
-                fontWeight: 700,
-                fontSize: "13px",
-                boxShadow: "0 4px 6px -1px rgba(107,33,168,0.15)"
-              }}
-            >
-              {isTxPending ? "⏳ Executing Safe Vault Withdrawal..." : "💰 Emergency Withdraw Contract Funds"}
-            </button>
-            <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "#701a75", fontWeight: 500 }}>
-              *Menarik seluruh akumulasi ETH yang terkunci di dalam jaringan *Smart Contract* ini langsung ke dompet admin utama.
-            </p>
+            <div style={{ borderTop: "1px dashed #d946ef", paddingTop: "15px" }}>
+              <button 
+                type="button" 
+                disabled={!isConnected || isTxPending} 
+                onClick={handleWithdrawFunds}
+                style={{ 
+                  background: "#6b21a8", 
+                  color: "white", 
+                  border: "none", 
+                  padding: "12px 24px", 
+                  borderRadius: "6px", 
+                  cursor: "pointer", 
+                  fontWeight: 700,
+                  fontSize: "13px",
+                  boxShadow: "0 4px 6px -1px rgba(107,33,168,0.15)"
+                }}
+              >
+                {isTxPending ? "⏳ Executing Safe Vault Withdrawal..." : "💰 Emergency Withdraw Contract Funds"}
+              </button>
+              <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "#701a75", fontWeight: 500 }}>
+                *Withdraw all accumulated ETH locked within this *Smart Contract* network directly to the main admin wallet.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
     </div>
   );
