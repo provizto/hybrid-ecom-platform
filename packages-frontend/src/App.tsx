@@ -73,7 +73,7 @@ function MainApp() {
     query: { enabled: !!parsedAbi && !!currentContractAddress }
   });
 
-  // 📡 Fungsi listener real-time di latar belakang (tetap dipertahankan sebagai backup)
+  // 📡 Fungsi listener real-time di latar belakang (sebagai cadangan tangkapan event)
   useWatchContractEvent({
     address: currentContractAddress,
     abi: parsedAbi || [],
@@ -87,14 +87,20 @@ function MainApp() {
           const tokenNum = args.tokenId ? String(args.tokenId) : "0";
           const productNum = args.productId ? String(args.productId) : "0";
           
-          // Mengecek jika log sudah ada secara lokal agar tidak double record
           setDbLogs((prev) => {
             const isExist = prev.some((l) => l.txHash === log.transactionHash);
-            if (isExist) return prev;
+            if (isExist) {
+              // Jika data log instan sudah ada, update nomor Token ID aslinya saja dari blockchain
+              return prev.map((l) => 
+                l.txHash === log.transactionHash || l.tokenId === "Minting..." || l.tokenId === "Relay-Mint"
+                  ? { ...l, tokenId: `#${tokenNum}` }
+                  : l
+              );
+            }
 
             const newLog: DbLog = {
               buyer: buyerAddr,
-              tokenId: `Token #${tokenNum}`,
+              tokenId: `#${tokenNum}`,
               productId: productNum,
               timestamp: new Date().toLocaleTimeString(),
               txHash: log.transactionHash || "0x...",
@@ -106,6 +112,25 @@ function MainApp() {
       });
     },
   });
+
+  // 🔄 LOGIKA AUTO-UPDATE: Mengubah status "Minting..." / "Relay-Mint" menjadi Token ID urut aman di UI setelah Tx Hash terbit
+  useEffect(() => {
+    if (txHash && dbLogs.length > 0) {
+      const hasPendingLog = dbLogs.some(log => log.tokenId === "Minting..." || log.tokenId === "Relay-Mint");
+      if (hasPendingLog) {
+        const calculatedIndex = `#${dbLogs.length - 1}`;
+        const truncatedHash = `${txHash.slice(0, 8)}...${txHash.slice(-6)}`;
+        
+        setDbLogs((prev) =>
+          prev.map((log) =>
+            log.tokenId === "Minting..." || log.tokenId === "Relay-Mint" || log.txHash.includes("Broadcasting") || log.txHash.includes("Relay")
+              ? { ...log, tokenId: calculatedIndex, txHash: truncatedHash }
+              : log
+          )
+        );
+      }
+    }
+  }, [txHash]);
 
   // 🔌 ENGINE KONEKSI WALLET MUTAKHIR DENGAN DEEP LINK OTOMATIS UNTUK HP
   const handleConnectWallet = async (connector: any) => {
