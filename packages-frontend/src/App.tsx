@@ -158,24 +158,32 @@ function MainApp() {
 
     if (isInAppWalletBrowser) {
       if (typeof connector === "string") {
-        // Jika user klik tombol teks manual saat di dalam dApp browser, pasangkan ke provider injected aktif
-        const activeInjected = connectors.find(c => c.id === "injected" || c.name.toLowerCase().includes("default") || c.name.toLowerCase().includes("browser"));
-        if (activeInjected) connect({ connector: activeInjected });
-        else if (connectors.length > 0) connect({ connector: connectors[0] });
+        // Cek objek asli wagmi yang namanya cocok (misal: "phantom" atau "backpack")
+        const matchingConnector = connectors.find(c => c.name.toLowerCase().includes(connector) || c.id.toLowerCase().includes(connector));
+        
+        if (matchingConnector) {
+          connect({ connector: matchingConnector });
+        } else {
+          // Fallback menggunakan injected default bawaan browser tersebut
+          const activeInjected = connectors.find(c => c.id === "injected" || c.name.toLowerCase().includes("default") || c.name.toLowerCase().includes("browser"));
+          if (activeInjected) connect({ connector: activeInjected });
+          else if (connectors.length > 0) connect({ connector: connectors[0] });
+        }
         return;
       } else {
-        // Jika klik objek koin asli wagmi, eksekusi langsung tanpa pemicu deep link ulang
         connect({ connector });
         return;
       }
     }
 
-    // FALLBACK LINK ENGINE: Hanya dipicu ketika user masih berada di Chrome / Safari Mobile biasa
+    // FALLBACK LINK ENGINE: Dipicu ketika user masih berada di Chrome / Safari Mobile biasa
     if (typeof connector === "string") {
       if (connector === "phantom") {
-        window.location.href = `https://phantom.app/ul/browse/${encodedUrl}`;
+        // FIX: Pakai custom protocol scheme agar tidak tertukar
+        window.location.href = `phantom://browse/${encodedUrl}`;
       } else if (connector === "backpack") {
-        window.location.href = `https://backpack.app/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`;
+        // FIX: Pakai custom protocol scheme eksklusif Backpack (Anti-Hijack Phantom!)
+        window.location.href = `backpack://dapp?url=${encodedUrl}`;
       }
       return;
     }
@@ -187,15 +195,15 @@ function MainApp() {
     try {
       if (isMobile) {
         if (cName.includes("metamask") || cId.includes("metamask")) {
-          window.location.href = `https://metamask.app.link/dapp/${cleanUrl}`;
+          window.location.href = `metamask://dapp/${cleanUrl}`;
           return;
         }
         if (cName.includes("phantom") || cId.includes("phantom")) {
-          window.location.href = `https://phantom.app/ul/browse/${encodedUrl}`;
+          window.location.href = `phantom://browse/${encodedUrl}`;
           return;
         }
         if (cName.includes("backpack") || cId.includes("backpack")) {
-          window.location.href = `https://backpack.app/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`;
+          window.location.href = `backpack://dapp?url=${encodedUrl}`;
           return;
         }
       }
