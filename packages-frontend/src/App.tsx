@@ -155,9 +155,9 @@ function MainApp() {
     // Handle Static Mobile Fallback Strings
     if (typeof connector === "string") {
       if (connector === "phantom") {
-        window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(window.location.href)}`;
+        window.location.href = `https://phantom.app/ul/browse/${cleanUrl}`;
       } else if (connector === "backpack") {
-        window.location.href = `https://backpack.app/open/${cleanUrl}`;
+        window.location.href = `https://backpack.app/ul/v1/browse/${cleanUrl}`;
       }
       return;
     }
