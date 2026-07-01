@@ -149,25 +149,40 @@ function MainApp() {
 
   // 🔌 INTERSTELLAR WEB3 PROVIDER ENGINE W/ MOBILE DEEP LINK PROTECTION
   const handleConnectWallet = async (connector: any) => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const cleanUrl = window.location.href.replace(/^https?:\/\//, "");
+
+    // Handle Static Mobile Fallback Strings
+    if (typeof connector === "string") {
+      if (connector === "phantom") {
+        window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(window.location.href)}`;
+      } else if (connector === "backpack") {
+        window.location.href = `https://backpack.app/open/${cleanUrl}`;
+      }
+      return;
+    }
+
     if (!connector) return;
     const cName = connector.name ? connector.name.toLowerCase() : "";
     const cId = connector.id ? connector.id.toLowerCase() : "";
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     try {
-      if (typeof window !== "undefined" && (window as any).ethereum) {
+      if (typeof window !== "undefined" && (window as any).ethereum && !isMobile) {
         connect({ connector });
         return;
       }
 
       if (isMobile) {
-        const cleanUrl = window.location.href.replace(/^https?:\/\//, "");
         if (cName.includes("metamask") || cId.includes("metamask")) {
           window.location.href = `https://metamask.app.link/dapp/${cleanUrl}`;
           return;
         }
         if (cName.includes("phantom") || cId.includes("phantom")) {
           window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(window.location.href)}`;
+          return;
+        }
+        if (cName.includes("backpack") || cId.includes("backpack")) {
+          window.location.href = `https://backpack.app/open/${cleanUrl}`;
           return;
         }
       }
@@ -383,6 +398,7 @@ function MainApp() {
               <button type="button" onClick={() => setIsWalletModalOpen(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#9ca3af" }}>✕</button>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {/* 1. Dynamic Injection Mapping via WAGMI */}
               {(connectors || []).map((connector) => {
                 let displayWalletName = connector.name || "Injected Node";
                 if (displayWalletName.toLowerCase() === "injected") displayWalletName = "Browser Default Extension";
@@ -393,6 +409,24 @@ function MainApp() {
                   </button>
                 );
               })}
+
+              {/* 2. Static Fallback Engine Forces Phantom & Backpack Visibility in Mobile Native Environments */}
+              {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && (
+                <>
+                  {!(connectors || []).some(c => (c.name || "").toLowerCase().includes("phantom")) && (
+                    <button onClick={() => { handleConnectWallet("phantom"); setIsWalletModalOpen(false); }} style={{ background: "#f9fafb", color: "#111827", border: "1px solid #e5e7eb", padding: "14px", borderRadius: "12px", cursor: "pointer", fontWeight: 700, fontSize: "14px", textAlign: "left", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span>🚀 Phantom</span>
+                      <span style={{ fontSize: "11px", color: "#2563eb", background: "#eff6ff", padding: "2px 6px", borderRadius: "4px", fontWeight: 600 }}>Launch</span>
+                    </button>
+                  )}
+                  {!(connectors || []).some(c => (c.name || "").toLowerCase().includes("backpack")) && (
+                    <button onClick={() => { handleConnectWallet("backpack"); setIsWalletModalOpen(false); }} style={{ background: "#f9fafb", color: "#111827", border: "1px solid #e5e7eb", padding: "14px", borderRadius: "12px", cursor: "pointer", fontWeight: 700, fontSize: "14px", textAlign: "left", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span>🚀 Backpack</span>
+                      <span style={{ fontSize: "11px", color: "#2563eb", background: "#eff6ff", padding: "2px 6px", borderRadius: "4px", fontWeight: 600 }}>Launch</span>
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
