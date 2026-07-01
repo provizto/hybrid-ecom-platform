@@ -182,7 +182,7 @@ function MainApp() {
           return;
         }
         if (cName.includes("backpack") || cId.includes("backpack")) {
-          window.location.href = `https://backpack.app/open/${cleanUrl}`;
+          window.location.href = `https://backpack.app/ul/browse/${cleanUrl}`;
           return;
         }
       }
