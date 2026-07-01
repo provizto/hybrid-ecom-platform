@@ -153,20 +153,12 @@ function MainApp() {
     const cleanUrl = window.location.href.replace(/^https?:\/\//, "");
     const encodedUrl = encodeURIComponent(window.location.href);
 
-    // FIX UTAMA: Jika user SUDAH berada di dalam dApp Browser internal (MetaMask/Phantom/Backpack mobile)
-    // window.ethereum akan otomatis ada. Langsung jabatkan koneksi tanpa redirect lagi!
-    if (typeof window !== "undefined" && (window as any).ethereum) {
-      if (typeof connector !== "string") {
-        connect({ connector });
-        return;
-      }
-    }
-
-    // Handle Static Mobile Fallback Strings (Ketika di browser biasa seperti Chrome/Safari mobile)
+    // Handle Static Mobile Fallback Strings
     if (typeof connector === "string") {
       if (connector === "phantom") {
         window.location.href = `https://phantom.app/ul/browse/${encodedUrl}`;
       } else if (connector === "backpack") {
+        // FIX: Menggunakan spesifikasi resmi Universal Link Backpack Docs (Wajib url-encode & ref parameter)
         window.location.href = `https://backpack.app/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`;
       }
       return;
@@ -177,7 +169,11 @@ function MainApp() {
     const cId = connector.id ? connector.id.toLowerCase() : "";
 
     try {
-      // Jika di HP dan masih di browser biasa, pancing deep link agar masuk ke aplikasi dompet
+      if (typeof window !== "undefined" && (window as any).ethereum && !isMobile) {
+        connect({ connector });
+        return;
+      }
+
       if (isMobile) {
         if (cName.includes("metamask") || cId.includes("metamask")) {
           window.location.href = `https://metamask.app.link/dapp/${cleanUrl}`;
@@ -188,12 +184,11 @@ function MainApp() {
           return;
         }
         if (cName.includes("backpack") || cId.includes("backpack")) {
+          // FIX: Penyesuaian otomatis untuk deteksi runtime mobile
           window.location.href = `https://backpack.app/ul/v1/browse/${encodedUrl}?ref=${encodedUrl}`;
           return;
         }
       }
-
-      // Default koneksi untuk desktop browser extension
       connect({ connector });
     } catch (err: any) {
       alert("Failed to prompt provider bridge orchestration: " + err.message);
