@@ -73,6 +73,7 @@ function MainApp() {
     query: { enabled: !!parsedAbi && !!currentContractAddress }
   });
 
+  // 📡 Fungsi listener real-time di latar belakang (tetap dipertahankan sebagai backup)
   useWatchContractEvent({
     address: currentContractAddress,
     abi: parsedAbi || [],
@@ -86,15 +87,21 @@ function MainApp() {
           const tokenNum = args.tokenId ? String(args.tokenId) : "0";
           const productNum = args.productId ? String(args.productId) : "0";
           
-          const newLog: DbLog = {
-            buyer: buyerAddr,
-            tokenId: tokenNum,
-            productId: productNum,
-            timestamp: new Date().toLocaleTimeString(),
-            txHash: log.transactionHash || "0x...",
-            currencyMethod: selectedCurrency === "USD" ? "USD Credit Card (Stripe)" : "IDR QRIS / e-Wallet"
-          };
-          setDbLogs((prev) => [newLog, ...prev]);
+          // Mengecek jika log sudah ada secara lokal agar tidak double record
+          setDbLogs((prev) => {
+            const isExist = prev.some((l) => l.txHash === log.transactionHash);
+            if (isExist) return prev;
+
+            const newLog: DbLog = {
+              buyer: buyerAddr,
+              tokenId: `Token #${tokenNum}`,
+              productId: productNum,
+              timestamp: new Date().toLocaleTimeString(),
+              txHash: log.transactionHash || "0x...",
+              currencyMethod: selectedCurrency === "USD" ? "USD Credit Card (Stripe)" : "IDR QRIS / e-Wallet"
+            };
+            return [newLog, ...prev];
+          });
         }
       });
     },
@@ -181,7 +188,7 @@ function MainApp() {
     });
   };
 
-  // 🔥 UPDATE INTEGRASI: Menembak buyDigitalGood dengan argumen dan nominal ETH yang pas
+  // 🔥 UPDATE INTEGRASI PEMBELIAN WEB3 + INSTANT LOCAL INJECTION MONITOR LOGS
   const handleDirectBuy = (id: any, priceEth: any) => {
     if (!isConnected || !address) {
       setIsWalletModalOpen(true);
@@ -202,8 +209,20 @@ function MainApp() {
       args: [BigInt(id), dummyAwsTokenUri],
       value: parseEther(String(priceEth)),
     });
+
+    // 🌟 BYPASS INSTAN: Langsung suntik baris data riwayat ke kotak log monitor lokal
+    const newLog: DbLog = {
+      buyer: String(address),
+      tokenId: "Minting...", 
+      productId: String(id),
+      timestamp: new Date().toLocaleTimeString(),
+      txHash: "Broadcasting to Sepolia Node...",
+      currencyMethod: "Direct Web3 Node (SepETH)"
+    };
+    setDbLogs((prev) => [newLog, ...prev]);
   };
 
+  // 🔥 UPDATE INTEGRASI SIMULASI FIAT RELAY MINT + INSTANT LOCAL INJECTION MONITOR LOGS
   const executeOnChainRelayMint = () => {
     let targetDeliveryAddress = address ? address : "0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5";
 
@@ -226,6 +245,17 @@ function MainApp() {
         functionName: "mintForFiatBuyer",
         args: [targetDeliveryAddress as `0x${string}`, dummyAwsTokenUri, BigInt(fiatProductId)],
       });
+
+      // 🌟 BYPASS INSTAN: Suntik data dengan keterangan rute Fiat riil (Stripe/QRIS)
+      const newLog: DbLog = {
+        buyer: String(targetDeliveryAddress),
+        tokenId: "Relay-Mint",
+        productId: String(fiatProductId),
+        timestamp: new Date().toLocaleTimeString(),
+        txHash: "Relay Settlement Completed",
+        currencyMethod: selectedCurrency === "USD" ? "USD Credit Card (Stripe)" : "IDR QRIS / e-Wallet"
+      };
+      setDbLogs((prev) => [newLog, ...prev]);
     }, 1500);
   };
 
@@ -551,7 +581,7 @@ function MainApp() {
               (dbLogs || []).map((log: DbLog, index: number) => (
                 <div key={index} style={{ background: "#ffffff", padding: "14px", borderRadius: "8px", border: "1px solid #bfdbfe", fontSize: "12px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                    <span style={{ fontWeight: 700, color: "#059669" }}>📩 Token ID: #{log.tokenId} Settled</span>
+                    <span style={{ fontWeight: 700, color: "#059669" }}>📩 Token ID: {log.tokenId}</span>
                     <span style={{ color: "#9ca3af" }}>{log.timestamp}</span>
                   </div>
                   <p style={{ margin: "3px 0" }}><strong>SKU Linked:</strong> Solutions SKU-0{log.productId}</p>
@@ -619,7 +649,7 @@ function MainApp() {
 
       </div>
 
-      {/* 🔐 SINKRONISASI LOGIKA: HANYA DIRENDER DI LAYAR BROWSER BILA DOMPET OWNER YANG TERHUBUNG */}
+      {/* 🔐 HANYA TAMPIL JIKA WALLET YANG TERHUBUNG ADALAH WALLET OWNER RAHASIA */}
       {isConnected && address?.toLowerCase() === "0xc7ac22cbe2c96c308dafbec609025c03a713fe01" && (
         <div style={{ background: "#fdf4ff", padding: "25px", borderRadius: "14px", border: "1px solid #d946ef", marginTop: "30px" }}>
           <h3 style={{ marginTop: 0, color: "#a21caf", fontSize: "16px", fontWeight: 700 }}>🛠️ Internal Management Panel (Operator Only)</h3>
@@ -659,7 +689,7 @@ function MainApp() {
                 {isTxPending ? "⏳ Executing Safe Vault Withdrawal..." : "💰 Emergency Withdraw Contract Funds"}
               </button>
               <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "#701a75", fontWeight: 500 }}>
-                *Withdraw all accumulated ETH locked within this *Smart Contract* network directly to the main admin wallet.
+                *Menarik seluruh akumulasi ETH yang terkunci di dalam jaringan *Smart Contract* ini langsung ke dompet admin utama.
               </p>
             </div>
           </div>
