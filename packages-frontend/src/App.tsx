@@ -585,11 +585,11 @@ function MainApp() {
                     placeholder="MM / YYYY" 
                     maxLength={9} 
                     onChange={(e) => {
-                      let value = e.target.value.replace(/\D/g, "");
-                      if (value.length > 2) {
-                        value = value.slice(0, 2) + " / " + value.slice(2, 6);
+                      let v = e.target.value.replace(/\D/g, "");
+                      if (v.length > 2) {
+                        v = v.slice(0, 2) + " / " + v.slice(2, 6);
                       }
-                      e.target.value = value;
+                      e.target.value = v;
                     }}
                     style={{ width: "100%", padding: "8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} 
                     required 
@@ -651,6 +651,24 @@ function MainApp() {
           </div>
         </div>
       )}
+
+      {/* 🌐 ENTERPRISE FOOTER & COPYRIGHT ARCHITECTURE */}
+      <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "30px", marginTop: "40px", textAlign: "center", fontSize: "14px", color: "#6b7280" }}>
+        <p style={{ margin: "0 0 8px 0", fontWeight: 500 }}>
+          © 2026 <strong>ZoniqFi</strong>. All rights reserved. Enterprise Hybrid B2B Core Settlement Protocol.
+        </p>
+        <p style={{ margin: 0 }}>
+          Powered by Ecosystem Node Deployments • Connect via{" "}
+          <a 
+            href="https://zoniqfi.com" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            style={{ color: "#2563eb", fontWeight: 700, textDecoration: "none", borderBottom: "1px dashed #2563eb" }}
+          >
+            ZoniqFi Network Core 🌐
+          </a>
+        </p>
+      </div>
 
     </div>
   );
