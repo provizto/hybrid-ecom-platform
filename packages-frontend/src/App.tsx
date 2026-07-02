@@ -297,14 +297,18 @@ function MainApp() {
 
     if (!targetDeliveryAddress.startsWith("0x") || targetDeliveryAddress.length !== 42) {
       alert("❌ Invalid ERC-20 Wallet Address!");
+      setShowQrisModal(false);
       return;
     }
 
     if (!parsedAbi || !currentContractAddress) {
       alert("Warning: Smart contract ABI configuration is not ready!");
+      setShowQrisModal(false);
       return;
     }
 
+    // 🟢 FIX: Tutup modal pop-up secara instan saat konfirmasi dipicu
+    setShowQrisModal(false);
     setFiatPaymentStatus("PROCESSING");
 
     setTimeout(() => {
@@ -383,7 +387,7 @@ function MainApp() {
       return;
     }
     setShowOtpModal(false);
-    setMockOtpInput("");
+    mockOtpInput.trim();
     executeOnChainRelayMint();
   };
 
@@ -427,7 +431,6 @@ function MainApp() {
             <p style={{ margin: "0 0 16px 0", fontSize: "11px", color: "#6b7280" }}>An authentication code has been transmitted to your card issuing bank's registered mobile device layout.</p>
             
             <form onSubmit={handleVerifyMockOtpSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {/* 🟢 FIXED: TS-COMPLIANT ALIGNMENT PROPERTIES APPLIED */}
               <div style={{ background: "#f8fafc", padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", textAlign: "left", fontSize: "11px", color: "#334155" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}><span>Merchant:</span> <strong>ZoniqFi Protocol Core</strong></div>
                 <div style={{ display: "flex", justifyContent: "space-between" }}><span>Amount:</span> <strong style={{ color: "#2563eb" }}>{convertedFiatPrice}</strong></div>
@@ -478,7 +481,7 @@ function MainApp() {
           <div style={{ backgroundColor: "#ffffff", padding: "25px", borderRadius: "16px", width: "100%", maxWidth: "320px", textAlign: "center" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
               <span style={{ fontWeight: 700, fontSize: "14px", color: "#111827" }}>🔌 Select Web3 Wallet</span>
-              <button type="button" onClick={() => setIsWalletModalOpen(false)} style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "#9ca3af" }}>✕</button>
+              <button type="button" onClick={() => season => setIsWalletModalOpen(false)} style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "#9ca3af" }}>✕</button>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {(connectors || []).map((connector) => {
@@ -559,7 +562,7 @@ function MainApp() {
         <h3 style={{ margin: "0 0 4px 0", fontSize: "18px", fontWeight: 700, color: "#111827" }}>🛒 B2B Digital Solutions Catalog</h3>
         <p style={{ margin: "0 0 16px 0", fontSize: "13px", color: "#6b7280" }}>Direct on-chain procurement infrastructure for enterprise infrastructure items.</p>
         
-        {/* COMPACT HIGH-CONTRAST CARD GRID */}
+        {/* COMPACT HIGH-CONTRARAST CARD GRID */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
           {(WHITELABEL_PRODUCTS || []).map((prod: Product) => {
             const priceEth = prod.defaultPriceEth || "0.05";
