@@ -376,7 +376,6 @@ function MainApp() {
     setShowOtpModal(true);
   };
 
-  // 💳 SUBMITTER ENGINE FOR 3D SECURE PROTOCOL VERIFICATION
   const handleVerifyMockOtpSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (mockOtpInput.trim().length < 4) {
@@ -428,7 +427,8 @@ function MainApp() {
             <p style={{ margin: "0 0 16px 0", fontSize: "11px", color: "#6b7280" }}>An authentication code has been transmitted to your card issuing bank's registered mobile device layout.</p>
             
             <form onSubmit={handleVerifyMockOtpSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div style={{ background: "#f8fafc", padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", textLeft: "left", fontSize: "11px", color: "#334155" }}>
+              {/* 🟢 FIXED: TS-COMPLIANT ALIGNMENT PROPERTIES APPLIED */}
+              <div style={{ background: "#f8fafc", padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", textAlign: "left", fontSize: "11px", color: "#334155" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}><span>Merchant:</span> <strong>ZoniqFi Protocol Core</strong></div>
                 <div style={{ display: "flex", justifyContent: "space-between" }}><span>Amount:</span> <strong style={{ color: "#2563eb" }}>{convertedFiatPrice}</strong></div>
               </div>
@@ -670,7 +670,7 @@ function MainApp() {
                   <div style={{ width: "100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <strong>Crypto-Native Clearing (Direct Web3 Wallet)</strong>
-                      <span style={{ fontSize: "8px", background: "#dbeafe", color: "#1e40af", padding: "1px 5px", borderRadius: "10px", fontWeight: 700 }}>🟢 WALLET ON</span>
+                      <span style={{ fontSize: "8px", background: "#dbeafe", color: "#1e40af", padding: "1px 5px", borderRadius: "10px", fontWeight: 700 }}>  WALLET ON</span>
                     </div>
                   </div>
                 </label>
@@ -691,7 +691,7 @@ function MainApp() {
                   <div style={{ width: "100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <strong>Account Abstraction Pipeline (Gasless Email Onboarding)</strong>
-                      <span style={{ fontSize: "8px", background: "#fee2e2", color: "#991b1b", padding: "1px 5px", borderRadius: "10px", fontWeight: 700 }}>🔴 WALLET OFF</span>
+                      <span style={{ fontSize: "8px", background: "#fee2e2", color: "#991b1b", padding: "1px 5px", borderRadius: "10px", fontWeight: 700 }}>  WALLET OFF</span>
                     </div>
                   </div>
                 </label>
