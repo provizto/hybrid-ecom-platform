@@ -48,6 +48,10 @@ function MainApp() {
   
   // LEGAL COMPLIANCE DISCLAIMER POP-UP STATE
   const [showDisclaimer, setShowDisclaimer] = useState<boolean>(true);
+
+  // 💳 3D SECURE OTP SIMULATION ENGINE STATE
+  const [showOtpModal, setShowOtpModal] = useState<boolean>(false);
+  const [mockOtpInput, setMockOtpInput] = useState<string>("");
   
   const [dynamicQrisUrl, setDynamicQrisUrl] = useState<string>("");
   const [isFetchingQris, setIsFetchingQris] = useState<boolean>(false);
@@ -293,17 +297,14 @@ function MainApp() {
 
     if (!targetDeliveryAddress.startsWith("0x") || targetDeliveryAddress.length !== 42) {
       alert("❌ Invalid ERC-20 Wallet Address!");
-      setShowQrisModal(false);
       return;
     }
 
     if (!parsedAbi || !currentContractAddress) {
       alert("Warning: Smart contract ABI configuration is not ready!");
-      setShowQrisModal(false); 
       return;
     }
 
-    setShowQrisModal(false);
     setFiatPaymentStatus("PROCESSING");
 
     setTimeout(() => {
@@ -347,6 +348,7 @@ function MainApp() {
     const productPriceEth = selectedProductData ? Number(selectedProductData.defaultPriceEth) : 0.05;
     const priceInIdr = Math.round(productPriceEth * ETH_TO_IDR_RATE);
 
+    // Path A: National Indonesian QRIS Clearing
     if (selectedCurrency === "IDR") {
       setIsFetchingQris(true);
       try {
@@ -369,6 +371,20 @@ function MainApp() {
       }
       return; 
     }
+
+    // Path B: Global Credit Card Rails (Trigger 3D Secure Verification Layer First)
+    setShowOtpModal(true);
+  };
+
+  // 💳 SUBMITTER ENGINE FOR 3D SECURE PROTOCOL VERIFICATION
+  const handleVerifyMockOtpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (mockOtpInput.trim().length < 4) {
+      alert("❌ Institutional Verification Error: Invalid Secure OTP digits!");
+      return;
+    }
+    setShowOtpModal(false);
+    setMockOtpInput("");
     executeOnChainRelayMint();
   };
 
@@ -399,6 +415,41 @@ function MainApp() {
             <button type="button" onClick={() => setShowDisclaimer(false)} style={{ width: "100%", background: "#111827", color: "#ffffff", padding: "12px", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 700, fontSize: "13px", letterSpacing: "0.02em", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
               Accept Protocol Terms & Proceed
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 🔐 HIGH-FIDELITY 3D SECURE 2.0 OTP BANK POP-UP OVERLAY */}
+      {showOtpModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 999998 }}>
+          <div style={{ backgroundColor: "#ffffff", padding: "26px", borderRadius: "14px", width: "90%", maxWidth: "360px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.15)", textAlign: "center" }}>
+            <div style={{ fontSize: "24px", marginBottom: "6px" }}>🔒</div>
+            <h3 style={{ margin: "0 0 4px 0", fontSize: "15px", fontWeight: 800, color: "#111827" }}>3D Secure 2.0 Verification</h3>
+            <p style={{ margin: "0 0 16px 0", fontSize: "11px", color: "#6b7280" }}>An authentication code has been transmitted to your card issuing bank's registered mobile device layout.</p>
+            
+            <form onSubmit={handleVerifyMockOtpSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ background: "#f8fafc", padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", textLeft: "left", fontSize: "11px", color: "#334155" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}><span>Merchant:</span> <strong>ZoniqFi Protocol Core</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}><span>Amount:</span> <strong style={{ color: "#2563eb" }}>{convertedFiatPrice}</strong></div>
+              </div>
+
+              <div>
+                <input 
+                  type="text" 
+                  placeholder="Enter 6-Digit OTP Code (e.g. 123456)" 
+                  maxLength={6}
+                  value={mockOtpInput}
+                  onChange={(e) => setMockOtpInput(e.target.value.replace(/\D/g, ""))}
+                  style={{ width: "100%", padding: "10px", borderRadius: "6px", border: "2px solid #cbd5e1", fontSize: "13px", boxSizing: "border-box", textAlign: "center", fontWeight: 700, letterSpacing: "0.2em", backgroundColor: "#ffffff", color: "#111827" }}
+                  required 
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                <button type="button" onClick={() => { setShowOtpModal(false); setMockOtpInput(""); }} style={{ width: "35%", background: "#f1f5f9", color: "#334155", border: "none", padding: "10px", borderRadius: "6px", cursor: "pointer", fontWeight: 600, fontSize: "12px" }}>Cancel</button>
+                <button type="submit" style={{ width: "65%", background: "#2563eb", color: "#ffffff", border: "none", padding: "10px", borderRadius: "6px", cursor: "pointer", fontWeight: 700, fontSize: "12px", boxShadow: "0 4px 10px rgba(37,99,235,0.2)" }}>Submit Secure Code</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -595,7 +646,7 @@ function MainApp() {
               </label>
             </div>
 
-            {/* 🗺️ HIGH-IMPACT PITCH CONVERSION PIPELINE SELECTOR */}
+            {/* HIGH-IMPACT PITCH CONVERSION PIPELINE SELECTOR */}
             <div style={{ background: "#ffffff", padding: "12px", borderRadius: "10px", border: "1px solid #fdba74" }}>
               <label style={{ display: "block", fontSize: "10px", fontWeight: 800, color: "#c2410c", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.03em" }}>
                 🗺️ Onboarding Interface & Conversion Pipeline:
@@ -726,10 +777,10 @@ function MainApp() {
 
 export default function App() {
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={config}>
         <MainApp />
-      </QueryClientProvider>
-    </WagmiProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 }
