@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZoniqFi Protocol | Enterprise Hybrid Web3 Settlement Layer</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --purple: #7c3aed;
+            --emerald: #059669;
+            --dark: #0f172a;
+            --gray: #475569;
+            --light: #f8fafc;
+        }
+        
+        body {
+            font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fafafa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Navigation */
+        header {
+            background-color: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 20px 0;
+        }
+        .nav-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--dark);
+            text-decoration: none;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: #ffffff;
+            padding: 80px 0;
+            text-align: center;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+        }
+        .hero h1 {
+            font-size: 38px;
+            font-weight: 800;
+            margin: 0 0 16px 0;
+            letter-spacing: -0.03em;
+        }
+        .hero p {
+            font-size: 16px;
+            color: #bfdbfe;
+            max-width: 750px;
+            margin: 0 auto 24px auto;
+        }
+        .badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+
+        /* Pricing/Tier Grid Section */
+        .tiers-section {
+            padding: 60px 0;
+        }
+        .section-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        /* Card Architecture */
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-1 { border: 2px solid var(--primary); }
+        .card-1:hover { box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.15); }
+        .card-2 { border: 2px solid var(--purple); }
+        .card-2:hover { box-shadow: 0 20px 25px -5px rgba(124, 58, 237, 0.15); }
+        .card-3 { border: 2px solid var(--emerald); }
+        .card-3:hover { box-shadow: 0 20px 25px -5px rgba(5, 150, 105, 0.15); }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .tag {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+        .tag-1 { background: #eff6ff; color: var(--primary); }
+        .tag-2 { background: #f5f3ff; color: var(--purple); }
+        .tag-3 { background: #ecfdf5; color: var(--emerald); }
+
+        .target-user {
+            font-size: 12px;
+            color: var(--gray);
+            font-weight: 600;
+        }
+        .card h4 {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 0 0 10px 0;
+        }
+        .card p {
+            font-size: 13px;
+            color: var(--gray);
+            margin: 0 0 20px 0;
+            min-height: 60px;
+        }
+
+        /* Features Bullet Points */
+        .features-box {
+            background: var(--light);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px dashed #e2e8f0;
+            margin-bottom: 24px;
+        }
+        .features-box span {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--dark);
+            display: block;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .feature-item {
+            font-size: 12px;
+            color: #334155;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Pricing & Button */
+        .price-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 16px;
+            margin-bottom: 16px;
+        }
+        .crypto-price {
+            font-size: 22px;
+            font-weight: 800;
+        }
+        .fiat-price {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray);
+        }
+        .btn {
+            width: 100%;
+            padding: 12px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            color: #ffffff;
+            transition: opacity 0.2s;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .btn-1 { background-color: var(--primary); }
+        .btn-2 { background-color: var(--purple); }
+        .btn-3 { background-color: var(--emerald); }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid #e5e7eb;
+            padding: 30px 0;
+            text-align: center;
+            font-size: 12px;
+            color: var(--gray);
+            background-color: #ffffff;
+            margin-top: 40px;
+        }
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container nav-wrapper">
+            <a href="#" class="logo">🚀 ZoniqFi</a>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <span class="badge">Grants Board Spec Evaluation</span>
+            <h1>Enterprise Software Utility Licensing Infrastructure</h1>
+            <p>Eliminating conversion drop-outs through dual-route automated fiat clearing webhooks and account abstraction token issuance pipelines.</p>
+        </div>
+    </section>
+
+    <section class="tiers-section">
+        <div class="container">
+            <h3 class="section-title">📦 Institutional Procurement Tier Matrices</h3>
+            
+            <div class="grid">
+                <div class="card card-1">
+                    <div>
+                        <div class="card-header">
+                            <span class="tag tag-1">Tier 01</span>
+                            <span class="target-user">Startups & Vendors</span>
+                        </div>
+                        <h4>Core Web3 Starter Kit</h4>
+                        <p>Essential framework designed to instantly embed on-chain digital utility licensing into traditional Web2 workflows with zero friction.</p>
+                        
+                        <div class="features-box">
+                            <span>Core Specs:</span>
+                            <div class="feature-item">✓ Instant ERC-721 Token Generation</div>
+                            <div class="feature-item">✓ Sponsored Gasless Email Onboarding</div>
+                            <div class="feature-item">✓ Standard Metamask Deep Linking</div>
+                            <div class="feature-item">✓ Dynamic Metadata URI Routing</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="price-box">
+                            <span class="crypto-price">0.05 ETH</span>
+                            <span class="fiat-price">Est: $175.00 USD</span>
+                        </div>
+                        <a href="https://starter.zoniqfi.com" target="_blank" class="btn btn-1">Launch Dashboard Demo</a>
+                    </div>
+                </div>
+
+                <div class="card card-2">
+                    <div>
+                        <div class="card-header">
+                            <span class="tag tag-2">Tier 02</span>
+                            <span class="target-user">Mid-Market Platforms</span>
+                        </div>
+                        <h4>Hybrid Enterprise Hub</h4>
+                        <p>Advanced hybrid payment orchestration layer seamlessly bridging regional fiat settlement pathways with distributed Web3 nodes.</p>
+                        
+                        <div class="features-box">
+                            <span>Core Specs:</span>
+                            <div class="feature-item">✓ Dual-Route Clearing (QRIS & Credit Card)</div>
+                            <div class="feature-item">✓ 3D Secure 2.0 Anti-Fraud Layer</div>
+                            <div class="feature-item">✓ High-Contrast White-Label Customization</div>
+                            <div class="feature-item">✓ Automated Event Emitter Logging</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="price-box">
+                            <span class="crypto-price">0.10 ETH</span>
+                            <span class="fiat-price">Est: $350.00 USD</span>
+                        </div>
+                        <a href="https://enterprise.zoniqfi.com" target="_blank" class="btn btn-2">Launch Dashboard Demo</a>
+                    </div>
+                </div>
+
+                <div class="card card-3">
+                    <div>
+                        <div class="card-header">
+                            <span class="tag tag-3">Tier 03</span>
+                            <span class="target-user">Conglomerates & Fintechs</span>
+                        </div>
+                        <h4>Institutional Node</h4>
+                        <p>Full sovereign digital architecture engineered for heavy transaction volumes, ensuring low-latency and automated compliance guardrails.</p>
+                        
+                        <div class="features-box">
+                            <span>Core Specs:</span>
+                            <div class="feature-item">✓ Dedicated Private RPC Node Network</div>
+                            <div class="feature-item">✓ Full AML / KYC Sandbox Compliance</div>
+                            <div class="feature-item">✓ Multi-Chain Asset Interoperability Layer</div>
+                            <div class="feature-item">✓ Automated Emergency Withdrawal Rules</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="price-box">
+                            <span class="crypto-price">0.20 ETH</span>
+                            <span class="fiat-price">Est: $700.00 USD</span>
+                        </div>
+                        <a href="https://institutional.zoniqfi.com" target="_blank" class="btn btn-3">Launch Dashboard Demo</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 <strong>ZoniqFi</strong>. All rights reserved. Enterprise Hybrid B2B Core Settlement Protocol.</p>
+            <p>Powered by Ecosystem Node Deployments • Connect via <a href="https://zoniqfi.com" target="_blank">ZoniqFi Network Core 🌐</a></p>
+        </div>
+    </footer>
+
+</body>
+</html>
