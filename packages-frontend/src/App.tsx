@@ -307,7 +307,6 @@ function MainApp() {
       return;
     }
 
-    // 🟢 FIX: Tutup modal pop-up secara instan saat konfirmasi dipicu
     setShowQrisModal(false);
     setFiatPaymentStatus("PROCESSING");
 
@@ -481,7 +480,7 @@ function MainApp() {
           <div style={{ backgroundColor: "#ffffff", padding: "25px", borderRadius: "16px", width: "100%", maxWidth: "320px", textAlign: "center" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
               <span style={{ fontWeight: 700, fontSize: "14px", color: "#111827" }}>🔌 Select Web3 Wallet</span>
-              <button type="button" onClick={() => season => setIsWalletModalOpen(false)} style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "#9ca3af" }}>✕</button>
+              <button type="button" onClick={() => setIsWalletModalOpen(false)} style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "#9ca3af" }}>✕</button>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {(connectors || []).map((connector) => {
@@ -562,7 +561,7 @@ function MainApp() {
         <h3 style={{ margin: "0 0 4px 0", fontSize: "18px", fontWeight: 700, color: "#111827" }}>🛒 B2B Digital Solutions Catalog</h3>
         <p style={{ margin: "0 0 16px 0", fontSize: "13px", color: "#6b7280" }}>Direct on-chain procurement infrastructure for enterprise infrastructure items.</p>
         
-        {/* COMPACT HIGH-CONTRARAST CARD GRID */}
+        {/* COMPACT HIGH-CONTRAST CARD GRID */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
           {(WHITELABEL_PRODUCTS || []).map((prod: Product) => {
             const priceEth = prod.defaultPriceEth || "0.05";
@@ -705,14 +704,16 @@ function MainApp() {
             {onboardingStrategy === "STRATEGY_2" && (
               <div style={{ background: "#ffffff", padding: "10px", borderRadius: "6px", border: "1px solid #e5e7eb" }}>
                 <label style={{ display: "block", fontSize: "10px", fontWeight: 700, marginBottom: "4px" }}>📍 ERC-20 RECIPIENT WALLET HEX:</label>
-                <input type="text" placeholder="Enter 0x..." value={fiatDeliveryAddress} onChange={(e) => setFiatDeliveryAddress(e.target.value)} style={{ width: "100%", padding: "6px", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "11px", boxSizing: "border-box", fontFamily: "monospace" }} required />
+                {/* 🟢 FIXED: Kunci warna background & teks agar terhindar dari Mobile Dark Mode */}
+                <input type="text" placeholder="Enter 0x..." value={fiatDeliveryAddress} onChange={(e) => setFiatDeliveryAddress(e.target.value)} style={{ width: "100%", padding: "6px", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "11px", boxSizing: "border-box", fontFamily: "monospace", backgroundColor: "#ffffff", color: "#111827" }} required />
               </div>
             )}
 
             {onboardingStrategy === "STRATEGY_1" && (
               <div style={{ background: "rgba(16, 185, 129, 0.05)", padding: "10px", borderRadius: "6px", border: "1px solid #a7f3d0" }}>
                 <label style={{ display: "block", fontSize: "10px", fontWeight: 700, marginBottom: "4px", color: "#065f46" }}>📧 RETAIL BUYER EMAIL CONTEXT:</label>
-                <input type="email" placeholder="retailbuyer@gmail.com" value={userEmailSimulation} onChange={(e) => setUserEmailSimulation(e.target.value)} style={{ width: "100%", padding: "6px", borderRadius: "4px", border: "1px solid #a7f3d0", fontSize: "11px", boxSizing: "border-box" }} required />
+                {/* 🟢 FIXED: Kunci warna background & teks agar terhindar dari Mobile Dark Mode */}
+                <input type="email" placeholder="retailbuyer@gmail.com" value={userEmailSimulation} onChange={(e) => setUserEmailSimulation(e.target.value)} style={{ width: "100%", padding: "6px", borderRadius: "4px", border: "1px solid #a7f3d0", fontSize: "11px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} required />
               </div>
             )}
 
@@ -720,21 +721,24 @@ function MainApp() {
               <div style={{ padding: "8px", backgroundColor: "#ffffff", borderRadius: "6px", border: "1px solid #fed7aa", fontSize: "11px", color: "#c2410c", fontWeight: 600 }}>🎯 QRIS Settlement Active.</div>
             ) : (
               <div style={{ backgroundColor: "#ffffff", padding: "10px", borderRadius: "6px", border: "1px solid #fed7aa", display: "flex", flexDirection: "column", gap: "6px" }}>
-                <input type="text" placeholder="0000 0000 0000 0000" maxLength={19} onChange={(e) => { let val = e.target.value.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim(); e.target.value = val; }} style={{ width: "100%", padding: "6px", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "11px", boxSizing: "border-box", fontFamily: "monospace" }} required />
+                {/* 🟢 FIXED: Kunci warna background & teks agar terhindar dari Mobile Dark Mode */}
+                <input type="text" placeholder="0000 0000 0000 0000" maxLength={19} onChange={(e) => { let val = e.target.value.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim(); e.target.value = val; }} style={{ width: "100%", padding: "6px", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "11px", boxSizing: "border-box", fontFamily: "monospace", backgroundColor: "#ffffff", color: "#111827" }} required />
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
-                  <input type="text" placeholder="MM / YYYY" maxLength={9} onChange={(e) => { let v = e.target.value.replace(/\D/g, ""); if (v.length > 2) v = v.slice(0, 2) + " / " + v.slice(2, 6); e.target.value = v; }} style={{ width: "100%", padding: "6px", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "11px", boxSizing: "border-box" }} required />
-                  <input type="password" placeholder="CVC" maxLength={3} style={{ width: "100%", padding: "6px", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "11px", boxSizing: "border-box" }} required />
+                  {/* 🟢 FIXED: Kunci warna background & teks agar terhindar dari Mobile Dark Mode */}
+                  <input type="text" placeholder="MM / YYYY" maxLength={9} onChange={(e) => { let v = e.target.value.replace(/\D/g, ""); if (v.length > 2) v = v.slice(0, 2) + " / " + v.slice(2, 6); e.target.value = v; }} style={{ width: "100%", padding: "6px", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "11px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} required />
+                  <input type="password" placeholder="CVC" maxLength={3} style={{ width: "100%", padding: "6px", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "11px", boxSizing: "border-box", backgroundColor: "#ffffff", color: "#111827" }} required />
                 </div>
               </div>
             )}
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "6px" }}>
-              <select value={fiatProductId} onChange={(e) => setFiatProductId(e.target.value)} style={{ width: "45%", padding: "6px", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "11px" }}>
+              {/* 🟢 FIXED: Kunci warna background & teks agar terhindar dari Mobile Dark Mode */}
+              <select value={fiatProductId} onChange={(e) => setFiatProductId(e.target.value)} style={{ width: "45%", padding: "6px", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "11px", backgroundColor: "#ffffff", color: "#111827" }}>
                 {(WHITELABEL_PRODUCTS || []).map((p: Product) => (
                   <option key={p.id} value={p.id}>SKU-0{p.id}</option>
                 ))}
               </select>
-              <div style={{ width: "55%", background: "#ffffff", padding: "6px", borderRadius: "4px", border: "1px solid #fed7aa", fontSize: "11px", textAlign: "center", fontWeight: 700 }}>
+              <div style={{ width: "55%", background: "#ffffff", padding: "6px", borderRadius: "4px", border: "1px solid #fed7aa", fontSize: "11px", textAlign: "center", fontWeight: 700, color: "#111827" }}>
                 {convertedFiatPrice}
               </div>
             </div>
@@ -752,8 +756,9 @@ function MainApp() {
           <h3 style={{ marginTop: 0, color: "#a21caf", fontSize: "14px", fontWeight: 700 }}>🛠️ Internal Management Panel (Operator Only)</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             <form onSubmit={handleSetPrice} style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "end" }}>
-              <input type="number" value={adminProductId} onChange={(e) => setAdminProductId(e.target.value)} style={{ padding: "6px", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "12px" }} required />
-              <input type="text" value={adminPrice} onChange={(e) => setAdminPrice(e.target.value)} style={{ padding: "6px", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "12px" }} required />
+              {/* 🟢 FIXED: Kunci warna background & teks agar terhindar dari Mobile Dark Mode */}
+              <input type="number" value={adminProductId} onChange={(e) => setAdminProductId(e.target.value)} style={{ padding: "6px", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "12px", backgroundColor: "#ffffff", color: "#111827" }} required />
+              <input type="text" value={adminPrice} onChange={(e) => setAdminPrice(e.target.value)} style={{ padding: "6px", borderRadius: "4px", border: "1px solid #d1d5db", fontSize: "12px", backgroundColor: "#ffffff", color: "#111827" }} required />
               <button type="submit" disabled={!isConnected || isTxPending} style={{ background: "#d946ef", color: "white", border: "none", padding: "7px 14px", borderRadius: "4px", cursor: "pointer", fontSize: "12px", fontWeight: 600 }}>Override Rate</button>
             </form>
             <div style={{ borderTop: "1px dashed #d946ef", paddingTop: "8px" }}>
