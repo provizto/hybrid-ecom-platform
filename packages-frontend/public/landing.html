@@ -5,21 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZoniqFi Protocol | Enterprise Hybrid Web3 Settlement Layer</title>
     
+    <!-- 🌐 AUTOMATIC LANDING TO APP SUBDOMAIN ROUTER -->
     <script>
         (function() {
             const hostname = window.location.hostname.toLowerCase();
             const urlParams = new URLSearchParams(window.location.search);
             
-            // Cek apakah diakses lewat subdomain kasir atau parameter khusus
             const isSubdomain = hostname.includes('starter') || 
                                 hostname.includes('enterprise') || 
                                 hostname.includes('institutional') || 
                                 urlParams.has('tier');
             
-            // Jika terdeteksi mengakses App/Kasir secara langsung, biarkan lewat.
-            // Tapi jika bukan (akses domain utama), kunci tetap di landing page ini.
             if (isSubdomain) {
-                // Biarkan routing internal React/App yang mengambil alih
+                // Internal React/App routing handles the view orchestration
             }
         })();
     </script>
@@ -36,7 +34,7 @@
         }
         
         * {
-            box-sizing: border-box; /* Mencegah tombol berantakan akibat hantaman padding */
+            box-sizing: border-box;
         }
         
         body {
@@ -192,6 +190,7 @@
             font-size: 12px;
             margin-bottom: 16px;
             border-radius: 0 8px 8px 0;
+            color: #334155;
         }
 
         /* Compliance Disclaimer Box */
@@ -203,6 +202,7 @@
             border-radius: 8px;
             font-size: 11px;
             margin-bottom: 20px;
+            line-height: 1.4;
         }
 
         /* Features Bullet Points */
@@ -249,7 +249,7 @@
             color: var(--gray);
         }
         
-        /* 🛠️ ULTRA BUTTON FIX: CLEAN FROM WARNINGS & ZERO CLIPPING */
+        /* 🛠️ ULTRA BUTTON FIX: ZERO WARNINGS, NO VERTICAL-ALIGN CLASH */
         .btn {
             display: block;
             width: 100%;
@@ -264,7 +264,7 @@
             text-decoration: none;
             color: #ffffff;
             transition: opacity 0.2s ease;
-            line-height: 48px; /* Teks otomatis ke tengah vertikal dengan sempurna */
+            line-height: 48px; 
             white-space: nowrap;
         }
         .btn:hover {
@@ -293,12 +293,14 @@
 </head>
 <body>
 
+    <!-- Header Navigation -->
     <header>
         <div class="container nav-wrapper">
             <a href="#" class="logo">🚀 ZoniqFi Protocol</a>
         </div>
     </header>
 
+    <!-- Hero Framework -->
     <section class="hero">
         <div class="container">
             <span class="badge">Grants Board Spec Evaluation v2.6</span>
@@ -307,6 +309,7 @@
         </div>
     </section>
 
+    <!-- Modular Utilities Grid Section -->
     <section class="tiers-section">
         <div class="container">
             <h3 class="section-title">📦 B2B Core Infrastructure Modules</h3>
@@ -314,6 +317,7 @@
             
             <div class="grid">
                 
+                <!-- 🏢 SKU-01 CARD (SaaS License) -->
                 <div class="card card-1">
                     <div>
                         <div class="card-header">
@@ -323,8 +327,9 @@
                         <h4>Enterprise SaaS License</h4>
                         <p>Lifetime access token code built for white-label core B2B digital goods distributions.</p>
                         
+                        <!-- 🇺🇸 FORMAL PURSUIT SPECIFICATION -->
                         <div class="purpose-box">
-                            💡 <b>Best For:</b> Platform keanggotaan digital & vendor aplikasi SaaS yang butuh aktivasi otomatis on-boarding *gasless* lewat email retail.
+                            💡 <b>Best For:</b> Digital membership platforms and SaaS vendors requiring automated, sponsored gasless user onboarding profiles powered by web2-to-web3 email triggers.
                         </div>
 
                         <div class="features-box">
@@ -335,8 +340,9 @@
                             <div class="feature-item">✓ Standard Metamask Deep Linking</div>
                         </div>
 
+                        <!-- 🇺🇸 LEGAL PROVIDER PROTECTION -->
                         <div class="legal-notice">
-                            ⚠️ <b>Operator Liability:</b> Segala urusan legalitas operasional finansial dan kepatuhan hukum wajib diatur mandiri oleh perusahaan pembeli.
+                            ⚠️ <b>Operator Liability Notice:</b> All financial clearings, payment gateways setup, and regulatory compliances are strictly the responsibility of the acquiring business operator.
                         </div>
                     </div>
                     <div>
@@ -348,6 +354,7 @@
                     </div>
                 </div>
 
+                <!-- 🔑 SKU-02 CARD (API Access) -->
                 <div class="card card-2">
                     <div>
                         <div class="card-header">
@@ -357,8 +364,9 @@
                         <h4>Developer API Access Token</h4>
                         <p>High-frequency production API blueprints engineered for backend checkout automated systems.</p>
                         
+                        <!-- 🇺🇸 FORMAL PURSUIT SPECIFICATION -->
                         <div class="purpose-box">
-                            💡 <b>Best For:</b> Sistem kasir e-commerce eksternal yang memerlukan trigger *webhook* instan secara real-time ke database lokal.
+                            💡 <b>Best For:</b> External e-commerce systems needing instant, high-rate real-time webhook event triggers to sync multi-currency transactions directly into an isolated local database.
                         </div>
 
                         <div class="features-box">
@@ -369,8 +377,9 @@
                             <div class="feature-item">✓ Real-time Webhook Event Emitters</div>
                         </div>
 
+                        <!-- 🇺🇸 LEGAL PROVIDER PROTECTION -->
                         <div class="legal-notice">
-                            ⚠️ <b>Operator Liability:</b> Segala urusan legalitas operasional finansial dan kepatuhan hukum wajib diatur mandiri oleh perusahaan pembeli.
+                            ⚠️ <b>Operator Liability Notice:</b> All financial clearings, payment gateways setup, and regulatory compliances are strictly the responsibility of the acquiring business operator.
                         </div>
                     </div>
                     <div>
@@ -382,6 +391,7 @@
                     </div>
                 </div>
 
+                <!-- 🎨 SKU-03 CARD (UI Toolkit) -->
                 <div class="card card-3">
                     <div>
                         <div class="card-header">
@@ -391,8 +401,9 @@
                         <h4>Premium Web3 UI Toolkit</h4>
                         <p>Pre-built production React component frameworks tailored for customized merchant UI layout sheets.</p>
                         
+                        <!-- 🇺🇸 FORMAL PURSUIT SPECIFICATION -->
                         <div class="purpose-box">
-                            💡 <b>Best For:</b> Tim frontend developer yang butuh komponen antarmuka modal koneksi multi-wallet siap pakai tanpa perlu koding dari nol.
+                            💡 <b>Best For:</b> Frontend development teams requiring pre-compiled user interface components and seamless multi-wallet connection modals without rebuilding layouts from scratch.
                         </div>
 
                         <div class="features-box">
@@ -403,8 +414,9 @@
                             <div class="feature-item">✓ Native Multi-Wallet Provider Modals</div>
                         </div>
 
+                        <!-- 🇺🇸 LEGAL PROVIDER PROTECTION -->
                         <div class="legal-notice">
-                            ⚠️ <b>Operator Liability:</b> Segala urusan legalitas operasional finansial dan kepatuhan hukum wajib diatur mandiri oleh perusahaan pembeli.
+                            ⚠️ <b>Operator Liability Notice:</b> All financial clearings, payment gateways setup, and regulatory compliances are strictly the responsibility of the acquiring business operator.
                         </div>
                     </div>
                     <div>
@@ -420,6 +432,7 @@
         </div>
     </section>
 
+    <!-- Corporate Footer -->
     <footer>
         <div class="container">
             <p>© 2026 <strong>ZoniqFi</strong>. All rights reserved. Sovereign Software Infrastructure Code Suite.</p>
