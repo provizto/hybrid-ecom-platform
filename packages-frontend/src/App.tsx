@@ -17,7 +17,7 @@ interface DbLog {
   currencyMethod: string;
 }
 
-// HIGH-CONTRAST ENTERPRISE CARD SCHEME
+// HIGH-CONTRAST ENTERPRISE CARD SCHEME FOR SKU ITEMS
 const cardThemes: Record<number, { bg: string; border: string; accent: string; shadow: string }> = {
   1: { bg: "#ffffff", border: "#2563eb", accent: "#eff6ff", shadow: "0 10px 25px -5px rgba(37, 99, 235, 0.15)" }, 
   2: { bg: "#ffffff", border: "#7c3aed", accent: "#f5f3ff", shadow: "0 10px 25px -5px rgba(124, 58, 237, 0.15)" }, 
@@ -38,7 +38,7 @@ function MainApp() {
   // Manual Delivery Hex Address State
   const [fiatDeliveryAddress, setFiatDeliveryAddress] = useState<string>("");
 
-  // ONBOARDING STRATEGY Selector Modes
+  // ONBOARDING INTERFACE CONVERSION STATES
   const [onboardingStrategy, setOnboardingStrategy] = useState<string>("STRATEGY_2"); 
   const [userEmailSimulation, setUserEmailSimulation] = useState<string>("");
 
@@ -46,7 +46,7 @@ function MainApp() {
   const [isWalletModalOpen, setIsWalletModalOpen] = useState<boolean>(false);
   const [showQrisModal, setShowQrisModal] = useState<boolean>(false);
   
-  // LEGAL COMPLIANCE DISCLAIMER ENGINE STATE
+  // LEGAL COMPLIANCE DISCLAIMER POP-UP STATE
   const [showDisclaimer, setShowDisclaimer] = useState<boolean>(true);
   
   const [dynamicQrisUrl, setDynamicQrisUrl] = useState<string>("");
@@ -595,30 +595,56 @@ function MainApp() {
               </label>
             </div>
 
-            {/* STRATEGY PREVIEW CARDS */}
+            {/* 🗺️ HIGH-IMPACT PITCH CONVERSION PIPELINE SELECTOR */}
             <div style={{ background: "#ffffff", padding: "12px", borderRadius: "10px", border: "1px solid #fdba74" }}>
-              <label style={{ display: "block", fontSize: "10px", fontWeight: 800, color: "#c2410c", marginBottom: "8px", textTransform: "uppercase" }}>
-                🗺️ Web3 Onboarding Delivery Strategy (Architecture Mode):
+              <label style={{ display: "block", fontSize: "10px", fontWeight: 800, color: "#c2410c", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                🗺️ Onboarding Interface & Conversion Pipeline:
               </label>
+              
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <label style={{ fontSize: "11px", display: "flex", alignItems: "start", gap: "6px", cursor: "pointer", padding: "6px", borderRadius: "6px", border: onboardingStrategy === "STRATEGY_2" ? "2px solid #2563eb" : "1px solid #e5e7eb", background: onboardingStrategy === "STRATEGY_2" ? "#f8fafc" : "#ffffff" }}>
+                
+                {/* STRATEGY 2 - CRYPTO NATIVE CLEARING */}
+                <label style={{ 
+                  fontSize: "11px", 
+                  display: "flex", 
+                  alignItems: "start", 
+                  gap: "6px", 
+                  cursor: "pointer", 
+                  padding: "6px", 
+                  borderRadius: "6px", 
+                  border: onboardingStrategy === "STRATEGY_2" ? "2px solid #2563eb" : "1px solid #e5e7eb", 
+                  background: onboardingStrategy === "STRATEGY_2" ? "#f8fafc" : "#ffffff" 
+                }}>
                   <input type="radio" name="strategy" value="STRATEGY_2" checked={onboardingStrategy === "STRATEGY_2"} onChange={() => setOnboardingStrategy("STRATEGY_2")} style={{ marginTop: "2px" }} />
                   <div style={{ width: "100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <strong>Strategy 2: Wallet Form</strong>
+                      <strong>Crypto-Native Clearing (Direct Web3 Wallet)</strong>
                       <span style={{ fontSize: "8px", background: "#dbeafe", color: "#1e40af", padding: "1px 5px", borderRadius: "10px", fontWeight: 700 }}>🟢 WALLET ON</span>
                     </div>
                   </div>
                 </label>
-                <label style={{ fontSize: "11px", display: "flex", alignItems: "start", gap: "6px", cursor: "pointer", padding: "6px", borderRadius: "6px", border: onboardingStrategy === "STRATEGY_1" ? "2px solid #10b981" : "1px solid #e5e7eb", background: onboardingStrategy === "STRATEGY_1" ? "#f0fdf4" : "#ffffff" }}>
+
+                {/* STRATEGY 1 - ACCOUNT ABSTRACTION PIPELINE */}
+                <label style={{ 
+                  fontSize: "11px", 
+                  display: "flex", 
+                  alignItems: "start", 
+                  gap: "6px", 
+                  cursor: "pointer", 
+                  padding: "6px", 
+                  borderRadius: "6px", 
+                  border: onboardingStrategy === "STRATEGY_1" ? "2px solid #10b981" : "1px solid #e5e7eb", 
+                  background: onboardingStrategy === "STRATEGY_1" ? "#f0fdf4" : "#ffffff" 
+                }}>
                   <input type="radio" name="strategy" value="STRATEGY_1" checked={onboardingStrategy === "STRATEGY_1"} onChange={() => setOnboardingStrategy("STRATEGY_1")} style={{ marginTop: "2px" }} />
                   <div style={{ width: "100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <strong>Strategy 1: Auto Email</strong>
+                      <strong>Account Abstraction Pipeline (Gasless Email Onboarding)</strong>
                       <span style={{ fontSize: "8px", background: "#fee2e2", color: "#991b1b", padding: "1px 5px", borderRadius: "10px", fontWeight: 700 }}>🔴 WALLET OFF</span>
                     </div>
                   </div>
                 </label>
+
               </div>
             </div>
 
