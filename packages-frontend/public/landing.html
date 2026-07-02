@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZoniqFi Protocol | Enterprise Hybrid Web3 Settlement Layer</title>
+    
+    <script>
+        (function() {
+            const hostname = window.location.hostname.toLowerCase();
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Cek apakah diakses lewat subdomain kasir atau parameter khusus
+            const isSubdomain = hostname.includes('starter') || 
+                                hostname.includes('enterprise') || 
+                                hostname.includes('institutional') || 
+                                urlParams.has('tier');
+            
+            // Jika terdeteksi mengakses App/Kasir secara langsung, biarkan lewat.
+            // Tapi jika bukan (akses domain utama), kunci tetap di landing page ini.
+            if (isSubdomain) {
+                // Biarkan routing internal React/App yang mengambil alih
+            }
+        })();
+    </script>
+
     <style>
         :root {
             --primary: #2563eb;
@@ -12,6 +32,11 @@
             --dark: #0f172a;
             --gray: #475569;
             --light: #f8fafc;
+            --danger: #dc2626;
+        }
+        
+        * {
+            box-sizing: border-box; /* Mencegah tombol berantakan akibat hantaman padding */
         }
         
         body {
@@ -51,22 +76,23 @@
         .hero {
             background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
             color: #ffffff;
-            padding: 80px 0;
+            padding: 70px 0;
             text-align: center;
             border-bottom-left-radius: 24px;
             border-bottom-right-radius: 24px;
         }
         .hero h1 {
-            font-size: 38px;
+            font-size: 36px;
             font-weight: 800;
             margin: 0 0 16px 0;
             letter-spacing: -0.03em;
         }
         .hero p {
-            font-size: 16px;
+            font-size: 15px;
             color: #bfdbfe;
-            max-width: 750px;
+            max-width: 780px;
             margin: 0 auto 24px auto;
+            line-height: 1.6;
         }
         .badge {
             background: rgba(255, 255, 255, 0.2);
@@ -154,8 +180,29 @@
         .card p {
             font-size: 13px;
             color: var(--gray);
-            margin: 0 0 20px 0;
-            min-height: 50px;
+            margin: 0 0 16px 0;
+            line-height: 1.5;
+        }
+
+        /* Business Purpose Info Box */
+        .purpose-box {
+            background-color: #f8fafc;
+            border-left: 4px solid var(--gray);
+            padding: 10px 12px;
+            font-size: 12px;
+            margin-bottom: 16px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* Compliance Disclaimer Box */
+        .legal-notice {
+            background-color: #fef2f2;
+            border: 1px solid #fee2e2;
+            color: #991b1b;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            margin-bottom: 20px;
         }
 
         /* Features Bullet Points */
@@ -164,7 +211,7 @@
             padding: 16px;
             border-radius: 12px;
             border: 1px dashed #e2e8f0;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
         .features-box span {
             font-size: 11px;
@@ -183,7 +230,7 @@
             gap: 6px;
         }
 
-        /* Pricing & Button */
+        /* Pricing & Button Layout Fixed */
         .price-box {
             display: flex;
             justify-content: space-between;
@@ -201,9 +248,13 @@
             font-weight: 600;
             color: var(--gray);
         }
+        
+        /* 🛠️ ULTRA BUTTON FIX: CLEAN FROM WARNINGS & ZERO CLIPPING */
         .btn {
+            display: block;
             width: 100%;
-            padding: 12px 0;
+            min-height: 48px; 
+            padding: 0 16px;  
             border: none;
             border-radius: 8px;
             font-size: 13px;
@@ -212,7 +263,9 @@
             text-align: center;
             text-decoration: none;
             color: #ffffff;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s ease;
+            line-height: 48px; /* Teks otomatis ke tengah vertikal dengan sempurna */
+            white-space: nowrap;
         }
         .btn:hover {
             opacity: 0.9;
@@ -250,14 +303,14 @@
         <div class="container">
             <span class="badge">Grants Board Spec Evaluation v2.6</span>
             <h1>Enterprise Software Utility Licensing Infrastructure</h1>
-            <p>Eliminating conversion drop-outs through dual-route automated fiat clearing webhooks and account abstraction token issuance pipelines.</p>
+            <p>Sovereign white-label software components built for independent on-chain transaction scaling. All local regulatory compliances, licensing frameworks, and transaction clearing executions are strictly managed by the respective operating business entity.</p>
         </div>
     </section>
 
     <section class="tiers-section">
         <div class="container">
             <h3 class="section-title">📦 B2B Core Infrastructure Modules</h3>
-            <div class="section-subtitle">Deploy specialized Web3 processing layers optimized for commercial clearing execution.</div>
+            <div class="section-subtitle">Deploy specialized sovereign code blocks optimized for independent checkout configurations.</div>
             
             <div class="grid">
                 
@@ -268,14 +321,22 @@
                             <span class="target-user">Core Infrastructure</span>
                         </div>
                         <h4>Enterprise SaaS License</h4>
-                        <p>Lifetime access token for the white-label B2B core software architecture network.</p>
+                        <p>Lifetime access token code built for white-label core B2B digital goods distributions.</p>
                         
+                        <div class="purpose-box">
+                            💡 <b>Best For:</b> Platform keanggotaan digital & vendor aplikasi SaaS yang butuh aktivasi otomatis on-boarding *gasless* lewat email retail.
+                        </div>
+
                         <div class="features-box">
                             <span>Module Perks & Specs:</span>
                             <div class="feature-item">✓ <b>Maximum 1 Active SKU Licensing Slot</b></div>
                             <div class="feature-item">✓ Instant ERC-721 Token Generation</div>
                             <div class="feature-item">✓ Sponsored Gasless Email Onboarding</div>
                             <div class="feature-item">✓ Standard Metamask Deep Linking</div>
+                        </div>
+
+                        <div class="legal-notice">
+                            ⚠️ <b>Operator Liability:</b> Segala urusan legalitas operasional finansial dan kepatuhan hukum wajib diatur mandiri oleh perusahaan pembeli.
                         </div>
                     </div>
                     <div>
@@ -294,14 +355,22 @@
                             <span class="target-user">Data Pipeline Node</span>
                         </div>
                         <h4>Developer API Access Token</h4>
-                        <p>Production-grade API access credentials designed for automated secure checkout systems.</p>
+                        <p>High-frequency production API blueprints engineered for backend checkout automated systems.</p>
                         
+                        <div class="purpose-box">
+                            💡 <b>Best For:</b> Sistem kasir e-commerce eksternal yang memerlukan trigger *webhook* instan secara real-time ke database lokal.
+                        </div>
+
                         <div class="features-box">
                             <span>Module Perks & Specs:</span>
                             <div class="feature-item">✓ <b>Maximum 2 Active SKU Licensing Slots</b></div>
                             <div class="feature-item">✓ Dual-Route Clearing (QRIS & Credit Card)</div>
                             <div class="feature-item">✓ 3D Secure 2.0 Institutional Anti-Fraud</div>
                             <div class="feature-item">✓ Real-time Webhook Event Emitters</div>
+                        </div>
+
+                        <div class="legal-notice">
+                            ⚠️ <b>Operator Liability:</b> Segala urusan legalitas operasional finansial dan kepatuhan hukum wajib diatur mandiri oleh perusahaan pembeli.
                         </div>
                     </div>
                     <div>
@@ -320,14 +389,22 @@
                             <span class="target-user">Frontend Extension</span>
                         </div>
                         <h4>Premium Web3 UI Toolkit</h4>
-                        <p>Pre-built highly optimized React components designed specifically for retail clearing.</p>
+                        <p>Pre-built production React component frameworks tailored for customized merchant UI layout sheets.</p>
                         
+                        <div class="purpose-box">
+                            💡 <b>Best For:</b> Tim frontend developer yang butuh komponen antarmuka modal koneksi multi-wallet siap pakai tanpa perlu koding dari nol.
+                        </div>
+
                         <div class="features-box">
                             <span>Module Perks & Specs:</span>
                             <div class="feature-item">✓ <b>Maximum 3 Active SKU Slots (Full Package)</b></div>
                             <div class="feature-item">✓ Dedicated Private RPC Node Framework</div>
                             <div class="feature-item">✓ Full AML / KYC Sandbox Compliance</div>
                             <div class="feature-item">✓ Native Multi-Wallet Provider Modals</div>
+                        </div>
+
+                        <div class="legal-notice">
+                            ⚠️ <b>Operator Liability:</b> Segala urusan legalitas operasional finansial dan kepatuhan hukum wajib diatur mandiri oleh perusahaan pembeli.
                         </div>
                     </div>
                     <div>
@@ -345,7 +422,7 @@
 
     <footer>
         <div class="container">
-            <p>© 2026 <strong>ZoniqFi</strong>. All rights reserved. Enterprise Hybrid B2B Core Settlement Protocol.</p>
+            <p>© 2026 <strong>ZoniqFi</strong>. All rights reserved. Sovereign Software Infrastructure Code Suite.</p>
             <p>Powered by Ecosystem Node Deployments • Connect via <a href="https://zoniqfi.com" target="_blank">ZoniqFi Network Core 🌐</a></p>
         </div>
     </footer>
